@@ -31,7 +31,10 @@ void processInput(GLFWwindow *window);
 //------------------------------------------------------------------
 // settings
 //------------------------------------------------------------------
-
+static void glfw_error_callback(int error, const char* description)
+{
+	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
@@ -53,9 +56,11 @@ int main()
 {
 	// glfw: initialize and configure
 	// ------------------------------
-	glfwInit();
+	glfwSetErrorCallback(glfw_error_callback);
+	if (!glfwInit())
+		return 1;
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
@@ -75,6 +80,8 @@ int main()
 		
 	// Create Context and Load OpenGL Functions
 	glfwMakeContextCurrent(window);
+	//Enable VSync
+	glfwSwapInterval(1);
 	//set Viewport size to program size
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	//Current Mouse position x,y 
@@ -108,8 +115,25 @@ int main()
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
 
-	// draw in wireframe
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
+	//---------------------------------------------------------------------------------------------------------
+	//		Gui Setup
+	//---------------------------------------------------------------------------------------------------------
+	//binding
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init();
+
+	// Setup style
+	//ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+	ImGui::StyleColorsLight();
+	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	//---------------------------------------------------------------------------------------------------------
 	//				Rendering Loop,  //only close with Esc or X button           
@@ -126,11 +150,16 @@ int main()
 		// -----
 		processInput(window);
 
+
 		// render
 		// ------
 		glClearColor(0.05f, 0.05f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	
+
+		//ImGui::Begin("App");
+		
 		// don't forget to enable shader before setting uniforms
 		ourShader.use();
 
@@ -147,17 +176,66 @@ int main()
 		ourShader.setMat4("model", model);
 		ourModel.Draw(ourShader);
 
+		// Start the ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		
+		//ImGui::End();
+	ImGui::Begin("Settings");
+	{
+	//
+	//	static float f = 0.0f;
+	//	static int counter = 0;
+	//	ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+	//	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+	//	//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+	//
+	//	ImGui::Text("Windows");
+	//
+	//
+	//	if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+	//		counter++;
+	//	ImGui::SameLine();
+	//	ImGui::Text("counter = %d", counter);
+	//
+	//	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	//
+	}
+	ImGui::End();
+
+		
+
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
-		// Flip Buffers and Draw
 		glfwSwapBuffers(window);
-		//Check for inputEvent, updte WindowState, call needed function
+		//Check for inputEvent, update WindowState, call needed function
 		glfwPollEvents();
-	}
 
-	// glfw: terminate, clearing all previously allocated GLFW resources.
+		
+
+		ImGui::Render();
+		//int display_w, display_h;
+		//glfwMakeContextCurrent(window);
+		//glfwGetFramebufferSize(window, &display_w, &display_h);
+		//glViewport(0, 0, display_w, display_h);
+		//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		
+		glfwMakeContextCurrent(window);
+		// Flip Buffers and Draw
+		//glfwSwapBuffers(window);
+	}
 	// ------------------------------------------------------------------
+	//		Cleanup
+	// ------------------------------------------------------------------
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	// glfw: terminate, clearing all previously allocated GLFW resources.
+	
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }
