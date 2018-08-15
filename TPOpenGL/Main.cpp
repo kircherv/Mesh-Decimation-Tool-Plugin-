@@ -1,16 +1,25 @@
+//context
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+//imgui
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <stdio.h>
 
+//math
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+//filesystem movement and import
 #include <learnopengl/filesystem.h>
 #include <learnopengl/shader_m.h>
 #include <learnopengl/camera.h>
 #include <learnopengl/model.h>
 
+//system
 #include <iostream>
 //import done in code, no gui yet
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
