@@ -48,7 +48,8 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-
+//model position
+glm::vec3 modelPos(0.0f, -1.75f, 0.0f);
 // ------------------------------------------------------------------
 //								MAIN
 // ------------------------------------------------------------------
@@ -110,7 +111,8 @@ int main()
 
 	// load models
 	// -----------
-	Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
+	//Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
+	Model ourModel("resources/objects/nanosuit/nanosuit.obj");
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
@@ -128,12 +130,12 @@ int main()
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
-
+	bool show_demo_window = true;
 	// Setup style
 	//ImGui::StyleColorsDark();
 	//ImGui::StyleColorsClassic();
 	ImGui::StyleColorsLight();
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	ImVec4 clear_color = ImVec4(0.24f, 0.4f, 0.9f, 1.0f);
 
 	//---------------------------------------------------------------------------------------------------------
 	//				Rendering Loop,  //only close with Esc or X button           
@@ -146,7 +148,6 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-
 		// Start the ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -156,16 +157,14 @@ int main()
 		// -----
 		processInput(window);
 
-
 		// render
 		// ------
-		//glClearColor(0.05f, 0.05f, 0.2f, 1.0f);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	
 
-		//ImGui::Begin("App");
+		
 		
 		// don't forget to enable shader before setting uniforms
 		ourShader.use();
@@ -178,7 +177,7 @@ int main()
 
 		// render the loaded model
 		glm::mat4 model;
-		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::translate(model, modelPos); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
 		ourShader.setMat4("model", model);
 		ourModel.Draw(ourShader);
@@ -186,54 +185,73 @@ int main()
 	
 		
 		//ImGui::End();
-	ImGui::Begin("Settings");
-	{
-	
-		static float f = 0.0f;
-		static int counter = 0;
-		ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-	
-		ImGui::Text("Windows");
-	
-	
-		if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-			counter++;
-		ImGui::SameLine();
-		ImGui::Text("counter = %d", counter);
-	
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	
-	}
-	ImGui::End();
-
-	ImGui::Render();
-	//next line is the actual render , and it has to be before the buffers swap
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui::Begin("Settings");
+		{
 		
+			static float f = 0.0f;
+			static int counter = 0;
+			ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+			ImGui::SliderFloat("Model Position: X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Model Position: Y-Axis", &modelPos.y, -2.0f, 2.0f);
+			ImGui::SliderFloat("Model Position: Z-Axis", &modelPos.z, -2.0f, 2.0f);
+			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+		
+			ImGui::Checkbox("Demo Window", &show_demo_window);
+			ImGui::Text("Windows");
+			if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+				model = glm::translate(model, modelPos);
+		
+			if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+				counter++;
+			ImGui::SameLine();
+			ImGui::Text("counter = %d", counter);
+		
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		
+		}
+		ImGui::End();
+
+		ImGui::BeginMainMenuBar();
+		{
+			if (ImGui::BeginMenu("Menu"))
+			{
+				ImGui::MenuItem("Open File");
+				ImGui::MenuItem("Save As..");
+				ImGui::MenuItem("Exit");
+				//ShowExampleMenuFile();
+				ImGui::EndMenu();
+			}
+		
+			if (ImGui::BeginMenu("Help"))
+			{
+				ImGui::MenuItem("Metrics");
+				ImGui::MenuItem("Style Editor");
+				ImGui::MenuItem("About ImGui");
+				ImGui::EndMenu();
+			}
+			ImGui::EndMainMenuBar();
+		
+		}
 
 
+		//good but too crowded, do not need so many sub buttons
+		// 4. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
+		//if (show_demo_window)
+		//{
+		//	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+		//	ImGui::ShowDemoWindow(&show_demo_window);
+		//}
+
+		ImGui::Render();
+		//next line is the actual render , and it has to be before the buffers swap
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		//Check for inputEvent, update WindowState, call needed function
 		glfwPollEvents();
 
-		
-
-		
-		//int display_w, display_h;
-		//glfwMakeContextCurrent(window);
-		//glfwGetFramebufferSize(window, &display_w, &display_h);
-		//glViewport(0, 0, display_w, display_h);
-		//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		
-	//	glfwMakeContextCurrent(window);
-		// Flip Buffers and Draw
-		//glfwSwapBuffers(window);
 	}
 	// ------------------------------------------------------------------
 	//		Cleanup
@@ -268,6 +286,7 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	 
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_HAND_CURSOR);
 	//Press C for Camera Control
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
