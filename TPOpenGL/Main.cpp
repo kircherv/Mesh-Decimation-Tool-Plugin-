@@ -81,7 +81,7 @@ int main()
 	// Create Context and Load OpenGL Functions
 	glfwMakeContextCurrent(window);
 	//Enable VSync
-	glfwSwapInterval(1);
+	//glfwSwapInterval(1);
 	//set Viewport size to program size
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	//Current Mouse position x,y 
@@ -123,7 +123,7 @@ int main()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -146,6 +146,12 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+
+		// Start the ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
 		// input
 		// -----
 		processInput(window);
@@ -153,7 +159,8 @@ int main()
 
 		// render
 		// ------
-		glClearColor(0.05f, 0.05f, 0.2f, 1.0f);
+		//glClearColor(0.05f, 0.05f, 0.2f, 1.0f);
+		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	
@@ -176,34 +183,34 @@ int main()
 		ourShader.setMat4("model", model);
 		ourModel.Draw(ourShader);
 
-		// Start the ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+	
 		
 		//ImGui::End();
 	ImGui::Begin("Settings");
 	{
-	//
-	//	static float f = 0.0f;
-	//	static int counter = 0;
-	//	ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-	//	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-	//	//ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-	//
-	//	ImGui::Text("Windows");
-	//
-	//
-	//	if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-	//		counter++;
-	//	ImGui::SameLine();
-	//	ImGui::Text("counter = %d", counter);
-	//
-	//	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	//
+	
+		static float f = 0.0f;
+		static int counter = 0;
+		ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+	
+		ImGui::Text("Windows");
+	
+	
+		if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+			counter++;
+		ImGui::SameLine();
+		ImGui::Text("counter = %d", counter);
+	
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	
 	}
 	ImGui::End();
 
+	ImGui::Render();
+	//next line is the actual render , and it has to be before the buffers swap
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		
 
 
@@ -215,7 +222,7 @@ int main()
 
 		
 
-		ImGui::Render();
+		
 		//int display_w, display_h;
 		//glfwMakeContextCurrent(window);
 		//glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -224,7 +231,7 @@ int main()
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		
-		glfwMakeContextCurrent(window);
+	//	glfwMakeContextCurrent(window);
 		// Flip Buffers and Draw
 		//glfwSwapBuffers(window);
 	}
