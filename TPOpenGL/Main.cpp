@@ -131,6 +131,10 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
 	bool show_demo_window = true;
+	static bool show_app_metrics = false;
+	static bool show_app_style_editor = false;
+	static bool show_app_about = false;
+	bool show_another_window = false;
 	// Setup style
 	//ImGui::StyleColorsDark();
 	//ImGui::StyleColorsClassic();
@@ -184,33 +188,47 @@ int main()
 
 	
 		
-		//ImGui::End();
-		ImGui::Begin("Settings");
+		
+		if (show_another_window)
 		{
-		
-			static float f = 0.0f;
-			static int counter = 0;
-			ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-			ImGui::SliderFloat("Model Position: X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-			ImGui::SliderFloat("Model Position: Y-Axis", &modelPos.y, -2.0f, 2.0f);
-			ImGui::SliderFloat("Model Position: Z-Axis", &modelPos.z, -2.0f, 2.0f);
-			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-		
-			ImGui::Checkbox("Demo Window", &show_demo_window);
-			ImGui::Text("Windows");
-			if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-				model = glm::translate(model, modelPos);
-		
-			if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-				counter++;
-			ImGui::SameLine();
-			ImGui::Text("counter = %d", counter);
-		
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		
-		}
-		ImGui::End();
+			ImGui::Begin("Settings", &show_another_window);
+			{
 
+				static float f = 0.0f;
+				static int counter = 0;
+				ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+				ImGui::SliderFloat("Model Position: X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				ImGui::SliderFloat("Model Position: Y-Axis", &modelPos.y, -2.0f, 2.0f);
+				ImGui::SliderFloat("Model Position: Z-Axis", &modelPos.z, -2.0f, 2.0f);
+				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+				ImGui::Checkbox("Demo Window", &show_demo_window);
+				ImGui::Text("Windows");
+				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+					model = glm::translate(model, modelPos);
+
+				if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+					counter++;
+				ImGui::SameLine();
+				ImGui::Text("counter = %d", counter);
+
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+			}
+		ImGui::End();
+		}
+
+		if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
+		if (show_app_style_editor) { ImGui::Begin("Style Editor", &show_app_style_editor); ImGui::ShowStyleEditor(); ImGui::End(); }
+		if (show_app_about)
+		{
+			ImGui::Begin("AboutMesh Decimator", &show_app_about, ImGuiWindowFlags_AlwaysAutoResize);
+			ImGui::Text("Mesh Decimator, %s", ImGui::GetVersion());
+			ImGui::Separator();
+			ImGui::Text("By Valentin Kircher Bautista.");
+			ImGui::Text("Mesh Decimator is licensed under the MIT License, see LICENSE for more information.");
+			ImGui::End();
+		}
 		ImGui::BeginMainMenuBar();
 		{
 			if (ImGui::BeginMenu("Menu"))
@@ -224,9 +242,11 @@ int main()
 		
 			if (ImGui::BeginMenu("Help"))
 			{
-				ImGui::MenuItem("Metrics");
-				ImGui::MenuItem("Style Editor");
-				ImGui::MenuItem("About ImGui");
+				//ImGui::ShowMetricsWindow();
+				ImGui::MenuItem("Settings", NULL, &show_another_window);
+				ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
+				ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
+				ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
