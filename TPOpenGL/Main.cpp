@@ -111,8 +111,9 @@ int main()
 
 	// load models
 	// -----------
-	//Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
-	Model ourModel("resources/objects/nanosuit/nanosuit.obj");
+	Model ourModel(FileSystem::getPath("resources/objects/rock/rock.obj"));
+	//Model ourModel("resources/objects/nanosuit/nanosuit.obj");
+	//Model ourModel("resources/objects/rock/rock.obj");
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
