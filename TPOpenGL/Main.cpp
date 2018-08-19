@@ -217,6 +217,13 @@ int main()
 				ImGui::SameLine();
 				ImGui::Text("counter = %d", counter);
 
+				ImGui::Checkbox("Wireframe", &isInWireframe);
+				if (isInWireframe)
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				else
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 			}
@@ -348,20 +355,23 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	if (firstMouse)
+	if (!inUI)
 	{
+		if (firstMouse)
+		{
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
 		lastX = xpos;
 		lastY = ypos;
-		firstMouse = false;
+
+		camera.ProcessMouseMovement(xoffset, yoffset);
 	}
-
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-	lastX = xpos;
-	lastY = ypos;
-
-	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
