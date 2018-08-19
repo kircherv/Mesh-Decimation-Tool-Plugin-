@@ -44,6 +44,10 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
+
+//ui
+bool inUI = false;
+bool isInWireframe = false;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -305,20 +309,29 @@ void processInput(GLFWwindow *window)
 
 	//Press Tab for mouse Control
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	 
+		inUI = true;
+	}
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_HAND_CURSOR);
 	//Press C for Camera Control
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+		inUI = false;
+	}
 	// Press 0 to show Wireframe
 	if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
+	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+		isInWireframe = true;
+	}
 	//Press F to Fill Rectangle
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		isInWireframe = false;
+	}
 
 }
 
