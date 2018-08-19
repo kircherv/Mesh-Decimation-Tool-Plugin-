@@ -48,6 +48,9 @@ bool firstMouse = true;
 //ui
 bool inUI = false;
 bool isInWireframe = false;
+bool isOpeningFile = false;
+bool isChangingModel = false;
+bool isChangingModel2 = false;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -135,11 +138,11 @@ int main()
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
-	bool show_demo_window = true;
+	bool show_settings_window = true;
+	bool show_modelSettings_window = false;
 	static bool show_app_metrics = false;
 	static bool show_app_style_editor = false;
 	static bool show_app_about = false;
-	bool show_another_window = false;
 	// Setup style
 	//ImGui::StyleColorsDark();
 	//ImGui::StyleColorsClassic();
@@ -193,29 +196,31 @@ int main()
 
 	
 		
-		
-		if (show_another_window)
+
+
+		if (show_settings_window)
 		{
-			ImGui::Begin("Settings", &show_another_window);
+			ImGui::Begin("Settings", &show_settings_window);
 			{
 
 				static float f = 0.0f;
 				static int counter = 0;
-				ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-				ImGui::SliderFloat("Model Position: X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::SliderFloat("Model Position: Y-Axis", &modelPos.y, -2.0f, 2.0f);
-				ImGui::SliderFloat("Model Position: Z-Axis", &modelPos.z, -2.0f, 2.0f);
-				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+				ImGui::Text("Settings");                           // Display some text (you can use a format string too)
 
-				ImGui::Checkbox("Demo Window", &show_demo_window);
-				ImGui::Text("Windows");
-				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-					model = glm::translate(model, modelPos);
+				ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
 
-				if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+				ImGui::Checkbox("Show About Window", &show_app_about);
+				ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
+				ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
+				ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
+				ImGui::Checkbox("is changing Model bool", &isChangingModel);
+				ImGui::Checkbox("is changing nanosuit Model bool", &isChangingModel2);
+
+				if (ImGui::Button("Counter"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 					counter++;
 				ImGui::SameLine();
 				ImGui::Text("counter = %d", counter);
+
 
 				ImGui::Checkbox("Wireframe", &isInWireframe);
 				if (isInWireframe)
@@ -224,10 +229,32 @@ int main()
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
+
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 			}
-		ImGui::End();
+			ImGui::End();
+		}
+
+		if (show_modelSettings_window)
+		{
+			ImGui::Begin("Settings", &show_modelSettings_window);
+			{
+
+				static float f = 0.0f;
+				static int counter = 0;
+				ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
+				ImGui::SliderFloat("X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				ImGui::SliderFloat("Y-Axis", &modelPos.y, -2.0f, 2.0f);
+				ImGui::SliderFloat("Z-Axis", &modelPos.z, -2.0f, 2.0f);
+				ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
+
+
+				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+					model = glm::translate(model, modelPos);
+
+			}
+			ImGui::End();
 		}
 
 		if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
@@ -241,28 +268,51 @@ int main()
 			ImGui::Text("Mesh Decimator is licensed under the MIT License, see LICENSE for more information.");
 			ImGui::End();
 		}
+
+		//		HWND glfwGetWin32Window(GLFWwindow *  	window);
+		//	if (isOpeningFile) { DoFileOpen(glfwGetWin32Window(window)); }
+		//if (isOpeningFile) { tinyfd_openFileDialog(NULL, NULL, 0,  NULL, "object files", 1); }
+		//if (isOpeningFile) { result = NFD_OpenDialog("png,jpg,obj", NULL, &outPath); }
+		//if (isOpeningFile) { NFD_OpenDialog("png,jpg,obj;pdf", NULL, &outPath); }
+
 		ImGui::BeginMainMenuBar();
 		{
 			if (ImGui::BeginMenu("Menu"))
 			{
-				ImGui::MenuItem("Open File");
+				//ImGui::MenuItem("Open File");
+				//ImGui::MenuItem("Open File", NULL, &isOpeningFile, false);
+				if (ImGui::Button("Open Files")) {
+
+					//openFile(); native file dialog
+					//Model newModel();
+					//openFile(newModel(outpath);
+					//newModel.Draw(ourShader);
+					isOpeningFile = true;
+
+					//if (filePathName.size() > 0) ImGui::Text("Choosed File Path Name : %s", filePathName.c_str());
+					//if (path.size() > 0) ImGui::Text("Choosed Path Name : %s", path.c_str());
+					//if (fileName.size() > 0) ImGui::Text("Choosed File Name : %s", fileName.c_str());
+					//if (filter.size() > 0) ImGui::Text("Choosed Filter : %s", filter.c_str());
+
+				}
 				ImGui::MenuItem("Save As..");
 				ImGui::MenuItem("Exit");
 				//ShowExampleMenuFile();
 				ImGui::EndMenu();
 			}
-		
+
 			if (ImGui::BeginMenu("Help"))
 			{
 				//ImGui::ShowMetricsWindow();
-				ImGui::MenuItem("Settings", NULL, &show_another_window);
+				ImGui::MenuItem("Settings", NULL, &show_settings_window);
+				ImGui::MenuItem("Model Settings", NULL, &show_modelSettings_window);
 				ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
 				ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
 				ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
-		
+
 		}
 
 
