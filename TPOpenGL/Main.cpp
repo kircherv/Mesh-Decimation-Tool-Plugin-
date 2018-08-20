@@ -55,8 +55,12 @@ bool isChangingModel2 = false;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-//model position
-glm::vec3 modelPos(0.0f, -1.75f, 0.0f);
+//positions
+//model 
+glm::vec3 modelPos(0.0f, 0.0f, 0.0f);
+glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
+// lighting
+glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
 // ------------------------------------------------------------------
 //								MAIN
 // ------------------------------------------------------------------
@@ -114,13 +118,91 @@ int main()
 
 	// build and compile shaders
 	// -------------------------
-	Shader ourShader("shaders/1.model_loading.vs", "shaders/1.model_loading.fs");
+	//Shader ourShader("shaders/1.model_loading.vs", "shaders/1.model_loading.fs");
+	Shader ourShader("shaders/2.2.basic_lighting.vs", "shaders/2.2.basic_lighting.fs");
+	Shader lampShader("shaders/2.2.lamp.vs", "shaders/2.2.lamp.fs");
 
 	// load models
 	// -----------
-	Model ourModel(FileSystem::getPath("resources/objects/rock/rock.obj"));
+	//Model ourModel(FileSystem::getPath("resources/objects/rock/rock.obj"));
+	Model ourModel(FileSystem::getPath("resources/objects/noTexture/nanosuit.obj"));
 	//Model ourModel("resources/objects/nanosuit/nanosuit.obj");
 	//Model ourModel("resources/objects/rock/rock.obj");
+
+
+	// set up vertex data (and buffer(s)) and configure vertex attributes
+	// ------------------------------------------------------------------
+	float vertices[] = {
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+	};
+	// first, configure the cube's VAO (and VBO)
+	unsigned int VBO, cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
+	glGenBuffers(1, &VBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindVertexArray(cubeVAO);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+
+	// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// note that we update the lamp's position attribute's stride to reflect the updated buffer data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
@@ -180,12 +262,17 @@ int main()
 		
 		// don't forget to enable shader before setting uniforms
 		ourShader.use();
+		ourShader.setVec3("objectColor", objectColor);
+		ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		ourShader.setVec3("lightPos", lightPos);
+		ourShader.setVec3("viewPos", camera.Position);
 
 		// view/projection transformations
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
+	
 
 		// render the loaded model
 		glm::mat4 model;
@@ -195,6 +282,17 @@ int main()
 		ourModel.Draw(ourShader);
 
 	
+		// also draw the lamp object
+		lampShader.use();
+		lampShader.setMat4("projection", projection);
+		lampShader.setMat4("view", view);
+		model = glm::mat4();
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+		lampShader.setMat4("model", model);
+
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		
 
 
@@ -247,7 +345,7 @@ int main()
 				ImGui::SliderFloat("X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				ImGui::SliderFloat("Y-Axis", &modelPos.y, -2.0f, 2.0f);
 				ImGui::SliderFloat("Z-Axis", &modelPos.z, -2.0f, 2.0f);
-				ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
+				ImGui::ColorEdit3("object Color", (float*)&objectColor); // Edit 3 floats representing a color
 
 
 				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
@@ -341,8 +439,13 @@ int main()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+	//deallocate all resources once they've outlived their purpose:
+	// ------------------------------------------------------------------------
+	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &lightVAO);
+	glDeleteBuffers(1, &VBO);
+
 	// glfw: terminate, clearing all previously allocated GLFW resources.
-	
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }
