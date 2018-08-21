@@ -163,6 +163,15 @@ private:
         std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
         
+		cout << "Found " << vertices.size() << " vertices" << endl;
+		cout << "Found " << indices.size() << " indices" << endl;
+		cout << "Found " << mesh->GetNumUVChannels << " number of Uv Channels" << endl;
+		//cout << "Found " << mesh-> << " number of Uv Channels" << endl;
+		cout << "Found " << mesh->mNumFaces << " number of Faces" << endl;
+
+
+
+
         // return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
     }

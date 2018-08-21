@@ -46,8 +46,10 @@ bool firstMouse = true;
 
 
 //ui
+bool lightingOn = true;
 bool inUI = false;
 bool isInWireframe = false;
+bool isJustLines = false;
 bool isOpeningFile = false;
 bool isChangingModel = false;
 bool isChangingModel2 = false;
@@ -313,6 +315,24 @@ int main()
 				ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
 				ImGui::Checkbox("is changing Model bool", &isChangingModel);
 				ImGui::Checkbox("is changing nanosuit Model bool", &isChangingModel2);
+				ImGui::Checkbox("lIGHTING ON", &lightingOn);
+
+				if (lightingOn)
+				{
+					glEnable(GL_LIGHTING);
+				}
+				else
+				{
+					glDisable(GL_LIGHTING);
+				}
+				ImGui::Checkbox("Line Rendering", &isJustLines);
+				//if (isJustLines)
+				//{
+				//	glPolygonOffset(1.0, 1.0);
+				//	glEnable(GL_POLYGON_OFFSET_FILL);
+				//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				//	//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+				//}
 
 				if (ImGui::Button("Counter"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 					counter++;
@@ -336,7 +356,7 @@ int main()
 
 		if (show_modelSettings_window)
 		{
-			ImGui::Begin("Settings", &show_modelSettings_window);
+			ImGui::Begin("Model Settings", &show_modelSettings_window);
 			{
 
 				static float f = 0.0f;
@@ -466,6 +486,15 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 
+	//if (lightingOn)
+	//{
+	//	glEnable(GL_LIGHTING);
+	//} 
+	//else 
+	//{
+	//	glDisable(GL_LIGHTING);
+	//}
+
 
 	//Press Tab for mouse Control
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
@@ -492,6 +521,14 @@ void processInput(GLFWwindow *window)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		isInWireframe = false;
 	}
+	//if
+	//if (isJustLines)
+	//{
+	//	glPolygonOffset(1.0, 1.0);
+	//	glEnable(GL_POLYGON_OFFSET_FILL);
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	//}
 
 }
 
