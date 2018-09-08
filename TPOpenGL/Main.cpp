@@ -68,6 +68,7 @@ float lastFrame = 0.0f;
 //model
 Model currentModel;
 
+
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
@@ -138,6 +139,7 @@ int main()
 	Shader lampShader("shaders/2.2.lamp.vs", "shaders/2.2.lamp.fs");
 
 	StaticGeometry::load();
+	currentModel = Model(ProgramSettings::ImportedModelPath);
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
