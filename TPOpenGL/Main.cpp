@@ -45,8 +45,8 @@ static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
-const unsigned int SCR_WIDTH = 1280;
-const unsigned int SCR_HEIGHT = 720;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -55,7 +55,8 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 //ui
-bool inUI = false;
+bool inUI = true;
+bool cameraMode = false;
 bool fileOpened = false;
 bool isInWireframe = false;
 bool isOpeningFile = false;
@@ -117,7 +118,7 @@ int main()
 	glfwSetScrollCallback(window, scroll_callback);
 
 	// tell GLFW to capture our mouse
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
@@ -245,30 +246,33 @@ int main()
 			ImGui::Begin("Settings", &show_settings_window);
 			{
 
-				static float f = 0.0f;
-				static int counter = 0;
+			
 				ImGui::Text("Settings");                           // Display some text (you can use a format string too)
 
 				ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
-
-				ImGui::Checkbox("Show About Window", &show_app_about);
+				
+				
 				ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
 				ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
 				ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
 				ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
-				
-
-				if (ImGui::Button("Counter"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-					counter++;
-				ImGui::SameLine();
-				ImGui::Text("counter = %d", counter);
-
 				ImGui::Checkbox("Wireframe", &isInWireframe);
 				if (isInWireframe)
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				else
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+				ImGui::Checkbox("Camera Mode", &cameraMode);
+				if (cameraMode) {
+					inUI = false;
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				}
+				else {
+
+					inUI = true;
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				}
+				ImGui::Checkbox("Show About Window", &show_app_about);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			}
 			ImGui::End();
@@ -342,8 +346,10 @@ int main()
 
 			if (ImGui::BeginMenu("Help"))
 			{
+				ImGui::Checkbox("Camera Mode", &cameraMode);
 				ImGui::MenuItem("Settings", NULL, &show_settings_window);
 				ImGui::MenuItem("Model Settings", NULL, &show_modelSettings_window);
+				ImGui::Checkbox("Light Settings", &show_lightSettings_window);
 				ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
 				ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
 				ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
@@ -401,6 +407,7 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
 	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		cameraMode = false;
 		inUI = true;
 	}
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_HAND_CURSOR);
@@ -408,6 +415,7 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
 	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		cameraMode = true;
 		inUI = false;
 	}
 	// Press 0 to show Wireframe
