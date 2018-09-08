@@ -139,7 +139,7 @@ int main()
 	Shader lampShader("shaders/2.2.lamp.vs", "shaders/2.2.lamp.fs");
 
 	StaticGeometry::load();
-	currentModel = Model(ProgramSettings::ImportedModelPath);
+	currentModel = Model(FileSystem::getPath("resources/objects/noTexture/nanosuit.obj"));
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
