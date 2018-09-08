@@ -140,6 +140,7 @@ int main()
 
 	StaticGeometry::load();
 
+
 	//std::string move = "resources/objects/noTexture/nanosuit.obj";
 	std::string cmdFile;
 	int cmdFileSelect;
@@ -169,7 +170,7 @@ int main()
 	}
 	currentModel = Model(FileSystem::getPath(cmdFile));
 	currentModel.setPath(cmdFile);
-
+	
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
 

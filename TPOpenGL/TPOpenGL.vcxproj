@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cmdStart.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="ImGuiFileDialog.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="static_geometry.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cmdStart.h" />
     <ClInclude Include="dirent.h" />
     <ClInclude Include="imgui.h" />
     <ClInclude Include="ImGuiFileDialog.h" />
