@@ -7,8 +7,18 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
+#include <Commdlg.h>
+#include <windows.h>
+#include "resource.h"
+
+#include "program_settings.h"
+#include "static_geometry.h"
 
 
+//tini dialog
+#include "tinyfiledialogs.h"
+#include "nfd.h"
+#include "ImGuiFileDialog.h"
 //math
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -35,35 +45,92 @@ static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1280;
+const unsigned int SCR_HEIGHT = 720;
 
 // camera
-Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-
 //ui
-bool lightingOn = true;
 bool inUI = false;
+bool fileOpened = false;
 bool isInWireframe = false;
-bool isJustLines = false;
 bool isOpeningFile = false;
 bool isChangingModel = false;
 bool isChangingModel2 = false;
+bool clickedok = false;
+
+
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-//positions
-//model 
-glm::vec3 modelPos(0.0f, 0.0f, 0.0f);
+//model position
+glm::vec3 modelPos(-1.0f, 0.0f, 0.0f);
+glm::vec3 modelPos2(1.0f, 0.0f, 3.0f);
+glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 zeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
 // lighting
-glm::vec3 lightPos(1.2f, 4.0f, 2.0f);
+glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
+
+//Model createModel(std::string path) 
+//{
+//	
+//	Model importModel;
+//	Shader importShader;
+//	//Model rockModel(FileSystem::getPath("resources/objects/rock/rock.obj"));
+//	if(fileOpened)
+//	{
+//		importModel = Model(FileSystem::getPath(path));
+//		importModel.loadModel(FileSystem::getPath(path));
+//		Shader import2Shader("shaders/1.model_loading3.vs", "shaders/1.model_loading3.fs");
+//	}
+//		importModel.loadModel(FileSystem::getPath(path));
+//		//importShader.initShader("shaders/1.model_loading3.vs", "shaders/1.model_loading3.fs");
+//		importShader = Shader("shaders/1.model_loading3.vs", "shaders/1.model_loading3.fs");
+//		//fileOpened = false;
+//		//if(!isOpeningFile)
+//		importModel.Draw(importShader);
+//		return importModel;
+//}
+//
+//Model createModel2(std::string path, Shader shader)
+//{
+//
+//	Model importModel;
+//	
+//	if (fileOpened)
+//		importModel = Model(FileSystem::getPath(path));
+//
+//	importModel.setPath(path);
+//	importModel.Draw(shader);
+//	return importModel;
+//}
+
+Model currentModel;
+
+void createModel3(std::string path, Shader shader)
+{
+	Model importModel;
+
+	if (fileOpened)
+		importModel = Model(FileSystem::getPath(path));
+
+	importModel.setPath(path);
+	//if((importModel.getPath != NULL) == TRUE)
+	importModel.Draw(shader);
+}
+
+
+
+
+
+
+
 // ------------------------------------------------------------------
 //								MAIN
 // ------------------------------------------------------------------
@@ -92,7 +159,7 @@ int main()
 		glfwTerminate();
 		return EXIT_FAILURE;
 	}
-		
+
 	// Create Context and Load OpenGL Functions
 	glfwMakeContextCurrent(window);
 	//Enable VSync
@@ -121,96 +188,16 @@ int main()
 
 	// build and compile shaders
 	// -------------------------
-	//Shader ourShader("shaders/1.model_loading.vs", "shaders/1.model_loading.fs");
-	Shader ourShader("shaders/2.2.basic_lighting.vs", "shaders/2.2.basic_lighting.fs");
+	Shader importShader("shaders/2.2.basic_lightingImport.vs", "shaders/2.2.basic_lightingImport.fs");
 	Shader lampShader("shaders/2.2.lamp.vs", "shaders/2.2.lamp.fs");
 
-	// load models
-	// -----------
-	//Model ourModel(FileSystem::getPath("resources/objects/rock/rock.obj"));
-	Model ourModel(FileSystem::getPath("resources/objects/noTexture/nanosuit.obj"));
-	//Model ourModel("resources/objects/nanosuit/nanosuit.obj");
-	//Model ourModel("resources/objects/rock/rock.obj");
-
-
-	// set up vertex data (and buffer(s)) and configure vertex attributes
-	// ------------------------------------------------------------------
-	float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
-	};
-	// first, configure the cube's VAO (and VBO)
-	unsigned int VBO, cubeVAO;
-	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(1, &VBO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindVertexArray(cubeVAO);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-
-	// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
-	unsigned int lightVAO;
-	glGenVertexArrays(1, &lightVAO);
-	glBindVertexArray(lightVAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// note that we update the lamp's position attribute's stride to reflect the updated buffer data
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	StaticGeometry::load();
 
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
 
-	
+
 	//---------------------------------------------------------------------------------------------------------
 	//		Gui Setup
 	//---------------------------------------------------------------------------------------------------------
@@ -219,21 +206,36 @@ int main()
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+														   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
+	//bool show_demo_window = true;
 	bool show_settings_window = true;
-	bool show_modelSettings_window = false;
 	static bool show_app_metrics = false;
 	static bool show_app_style_editor = false;
 	static bool show_app_about = false;
+	bool show_modelSettings_window = false;
+	bool show_lightSettings_window = false;
+
 	// Setup style
 	//ImGui::StyleColorsDark();
 	//ImGui::StyleColorsClassic();
 	ImGui::StyleColorsLight();
 	ImVec4 clear_color = ImVec4(0.24f, 0.4f, 0.9f, 1.0f);
 
+
+
+
+
+
+	// load models
+	// -----------
+	//Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
+	//createModel(importPath);
+	//Model importModel(FileSystem::getPath(importPath));
+	//importModel.
+	//Model rockModel(outPathRock);
 	//---------------------------------------------------------------------------------------------------------
 	//				Rendering Loop,  //only close with Esc or X button           
 	//---------------------------------------------------------------------------------------------------------
@@ -259,33 +261,20 @@ int main()
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	
 
-		
-		
 		// don't forget to enable shader before setting uniforms
-		ourShader.use();
-		ourShader.setVec3("objectColor", objectColor);
-		ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-		ourShader.setVec3("lightPos", lightPos);
-		ourShader.setVec3("viewPos", camera.Position);
+
 
 		// view/projection transformations
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view", view);
-	
 
 		// render the loaded model
 		glm::mat4 model;
 		model = glm::translate(model, modelPos); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-		ourShader.setMat4("model", model);
-		ourModel.Draw(ourShader);
 
-	
-		// also draw the lamp object
+																// also draw the lamp object
 		lampShader.use();
 		lampShader.setMat4("projection", projection);
 		lampShader.setMat4("view", view);
@@ -294,9 +283,39 @@ int main()
 		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 		lampShader.setMat4("model", model);
 
-		glBindVertexArray(lightVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		
+		StaticGeometry::renderLightCube();
+
+		importShader.use();
+		importShader.setVec3("objectColor", objectColor);
+		importShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		importShader.setVec3("lightPos", lightPos);
+		importShader.setVec3("viewPos", camera.Position);
+		importShader.setMat4("projection", projection);
+		importShader.setMat4("view", view);
+		glm::mat4 model3;
+		model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
+		model3 = glm::scale(model3, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		importShader.setMat4("model", model3);
+
+		if (isOpeningFile)
+		{
+			if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", ""))
+			{
+				if (ImGuiFileDialog::Instance()->IsOk == true)
+				{
+					ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
+
+					std::cout << "openButton ok and model " << ProgramSettings::ImportedModelPath << " has been imported!" << endl;
+
+					currentModel = Model(ProgramSettings::ImportedModelPath);
+					currentModel.setPath(ProgramSettings::ImportedModelPath);
+				}
+
+				isOpeningFile = false;
+			}
+		}
+
+		currentModel.Draw(importShader);
 
 
 		if (show_settings_window)
@@ -312,28 +331,11 @@ int main()
 
 				ImGui::Checkbox("Show About Window", &show_app_about);
 				ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
+				ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
 				ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
 				ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
 				ImGui::Checkbox("is changing Model bool", &isChangingModel);
 				ImGui::Checkbox("is changing nanosuit Model bool", &isChangingModel2);
-				ImGui::Checkbox("lIGHTING ON", &lightingOn);
-
-				if (lightingOn)
-				{
-					glEnable(GL_LIGHTING);
-				}
-				else
-				{
-					glDisable(GL_LIGHTING);
-				}
-				ImGui::Checkbox("Line Rendering", &isJustLines);
-				//if (isJustLines)
-				//{
-				//	glPolygonOffset(1.0, 1.0);
-				//	glEnable(GL_POLYGON_OFFSET_FILL);
-				//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				//	//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-				//}
 
 				if (ImGui::Button("Counter"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 					counter++;
@@ -366,15 +368,31 @@ int main()
 				ImGui::SliderFloat("X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				ImGui::SliderFloat("Y-Axis", &modelPos.y, -2.0f, 2.0f);
 				ImGui::SliderFloat("Z-Axis", &modelPos.z, -2.0f, 2.0f);
-				ImGui::ColorEdit3("object Color", (float*)&objectColor); // Edit 3 floats representing a color
+				ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 
 
-					// Buttons return true when clicked (NB: most widgets return true when edited/activated)
-				if (ImGui::Button("Reset Position"))
-				{
-					modelPos = zeroPos;
+				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 					model = glm::translate(model, modelPos);
-				}
+
+			}
+			ImGui::End();
+		}
+
+		if (show_lightSettings_window)
+		{
+			ImGui::Begin("Light Settings", &show_lightSettings_window);
+			{
+
+				static float f = 0.0f;
+				static int counter = 0;
+				ImGui::Text("Change Light Position");                           // Display some text (you can use a format string too)
+				ImGui::SliderFloat("X-Axis", &lightPos.x, -5.0f, 5.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				ImGui::SliderFloat("Y-Axis", &lightPos.y, -5.0f, 5.0f);
+				ImGui::SliderFloat("Z-Axis", &lightPos.z, -5.0f, 5.0f);
+
+				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+					model = glm::translate(model, zeroPos);
+
 			}
 			ImGui::End();
 		}
@@ -391,27 +409,15 @@ int main()
 			ImGui::End();
 		}
 
-		//		HWND glfwGetWin32Window(GLFWwindow *  	window);
-		//	if (isOpeningFile) { DoFileOpen(glfwGetWin32Window(window)); }
-		//if (isOpeningFile) { tinyfd_openFileDialog(NULL, NULL, 0,  NULL, "object files", 1); }
-		//if (isOpeningFile) { result = NFD_OpenDialog("png,jpg,obj", NULL, &outPath); }
-		//if (isOpeningFile) { NFD_OpenDialog("png,jpg,obj;pdf", NULL, &outPath); }
-
 		ImGui::BeginMainMenuBar();
 		{
 			if (ImGui::BeginMenu("Menu"))
 			{
-				//ImGui::MenuItem("Open File");
-				//ImGui::MenuItem("Open File", NULL, &isOpeningFile, false);
 				if (ImGui::Button("Open Files")) {
 
-					//openFile(); native file dialog
-					//Model newModel();
-					//openFile(newModel(outpath);
-					//newModel.Draw(ourShader);
 					isOpeningFile = true;
 
-					//if (filePathName.size() > 0) ImGui::Text("Choosed File Path Name : %s", filePathName.c_str());
+					if (ProgramSettings::ImportedModelPath.length() > 0)ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
 					//if (path.size() > 0) ImGui::Text("Choosed Path Name : %s", path.c_str());
 					//if (fileName.size() > 0) ImGui::Text("Choosed File Name : %s", fileName.c_str());
 					//if (filter.size() > 0) ImGui::Text("Choosed Filter : %s", filter.c_str());
@@ -438,18 +444,11 @@ int main()
 		}
 
 
-		//good but too crowded, do not need so many sub buttons
-		// 4. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-		//if (show_demo_window)
-		//{
-		//	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-		//	ImGui::ShowDemoWindow(&show_demo_window);
-		//}
 
 		ImGui::Render();
 		//next line is the actual render , and it has to be before the buffers swap
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-			
+
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
@@ -463,13 +462,12 @@ int main()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+	// glfw: terminate, clearing all previously allocated GLFW resources.
+
 	//deallocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(1, &cubeVAO);
-	glDeleteVertexArrays(1, &lightVAO);
-	glDeleteBuffers(1, &VBO);
+	StaticGeometry::deleteGeometry();
 
-	// glfw: terminate, clearing all previously allocated GLFW resources.
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }
@@ -489,15 +487,6 @@ void processInput(GLFWwindow *window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
-
-	//if (lightingOn)
-	//{
-	//	glEnable(GL_LIGHTING);
-	//} 
-	//else 
-	//{
-	//	glDisable(GL_LIGHTING);
-	//}
 
 
 	//Press Tab for mouse Control
@@ -525,15 +514,6 @@ void processInput(GLFWwindow *window)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		isInWireframe = false;
 	}
-	//if
-	//if (isJustLines)
-	//{
-	//	glPolygonOffset(1.0, 1.0);
-	//	glEnable(GL_POLYGON_OFFSET_FILL);
-	//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	//	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	//}
-
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -549,8 +529,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	if (!inUI)
-	{
+
+	if (!inUI) {
 		if (firstMouse)
 		{
 			lastX = xpos;
