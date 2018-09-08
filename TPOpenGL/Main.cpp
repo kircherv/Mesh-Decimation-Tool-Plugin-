@@ -1,28 +1,24 @@
 //context
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+//math
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 //imgui
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <stdio.h>
-#include <Commdlg.h>
-#include <windows.h>
-#include "resource.h"
 
-#include "program_settings.h"
-#include "static_geometry.h"
+
 
 
 //tini dialog
 #include "tinyfiledialogs.h"
 #include "nfd.h"
 #include "ImGuiFileDialog.h"
-//math
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+
 
 //filesystem movement and import
 #include <learnopengl/filesystem.h>
@@ -31,7 +27,15 @@
 #include <learnopengl/model.h>
 
 //system
+#include <stdio.h>
+#include <Commdlg.h>
+#include <windows.h>
+#include "resource.h"
 #include <iostream>
+//settings and camera
+#include "program_settings.h"
+#include "static_geometry.h"
+#include "cmdStart.h"
 //import done in code, no gui yet
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -140,8 +144,9 @@ int main()
 
 	StaticGeometry::load();
 
+	
+	//uncomment for cmd file selection
 
-	//std::string move = "resources/objects/noTexture/nanosuit.obj";
 	std::string cmdFile;
 	int cmdFileSelect;
 	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl;
@@ -170,6 +175,10 @@ int main()
 	}
 	currentModel = Model(FileSystem::getPath(cmdFile));
 	currentModel.setPath(cmdFile);
+
+	//tried to refactor
+	//CmdStart startcmd;
+	//startcmd.selectObj();
 	
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));

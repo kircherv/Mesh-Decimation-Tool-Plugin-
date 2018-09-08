@@ -4,6 +4,8 @@
 //system
 #include <iostream>
 #include <stdio.h>
+#include <learnopengl/filesystem.h>
+#include <learnopengl/model.h>
 class CmdStart
 {
 public:
@@ -12,5 +14,7 @@ public:
 	std::string cmdFile;
 	int cmdFileSelect;
 	
+	void selectObj();
+
 };
 
