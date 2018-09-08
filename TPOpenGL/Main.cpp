@@ -59,75 +59,20 @@ bool inUI = false;
 bool fileOpened = false;
 bool isInWireframe = false;
 bool isOpeningFile = false;
-bool isChangingModel = false;
-bool isChangingModel2 = false;
-bool clickedok = false;
-
 
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-//model position
-glm::vec3 modelPos(-1.0f, 0.0f, 0.0f);
-glm::vec3 modelPos2(1.0f, 0.0f, 3.0f);
-glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
-glm::vec3 zeroPos(0.0f, 0.0f, 0.0f);
-glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
-// lighting
-glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
-
-//Model createModel(std::string path) 
-//{
-//	
-//	Model importModel;
-//	Shader importShader;
-//	//Model rockModel(FileSystem::getPath("resources/objects/rock/rock.obj"));
-//	if(fileOpened)
-//	{
-//		importModel = Model(FileSystem::getPath(path));
-//		importModel.loadModel(FileSystem::getPath(path));
-//		Shader import2Shader("shaders/1.model_loading3.vs", "shaders/1.model_loading3.fs");
-//	}
-//		importModel.loadModel(FileSystem::getPath(path));
-//		//importShader.initShader("shaders/1.model_loading3.vs", "shaders/1.model_loading3.fs");
-//		importShader = Shader("shaders/1.model_loading3.vs", "shaders/1.model_loading3.fs");
-//		//fileOpened = false;
-//		//if(!isOpeningFile)
-//		importModel.Draw(importShader);
-//		return importModel;
-//}
-//
-//Model createModel2(std::string path, Shader shader)
-//{
-//
-//	Model importModel;
-//	
-//	if (fileOpened)
-//		importModel = Model(FileSystem::getPath(path));
-//
-//	importModel.setPath(path);
-//	importModel.Draw(shader);
-//	return importModel;
-//}
-
+//model
 Model currentModel;
 
-void createModel3(std::string path, Shader shader)
-{
-	Model importModel;
-
-	if (fileOpened)
-		importModel = Model(FileSystem::getPath(path));
-
-	importModel.setPath(path);
-	//if((importModel.getPath != NULL) == TRUE)
-	importModel.Draw(shader);
-}
-
-
-
-
+glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
+glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
+glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
+// lighting
+glm::vec3 lightZeroPos(1.2f, 2.0f, 2.0f);
+glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
 
 
 
@@ -150,8 +95,8 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
 #endif
 
-														 // glfw window creation
-														 // --------------------
+	// glfw window creation
+	// --------------------
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Tool & Plugin: Mesh Decimator", NULL, NULL);
 	// Check for Valid Context
 	if (window == nullptr) {
@@ -193,10 +138,8 @@ int main()
 
 	StaticGeometry::load();
 
-
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
-
 
 	//---------------------------------------------------------------------------------------------------------
 	//		Gui Setup
@@ -224,18 +167,6 @@ int main()
 	ImGui::StyleColorsLight();
 	ImVec4 clear_color = ImVec4(0.24f, 0.4f, 0.9f, 1.0f);
 
-
-
-
-
-
-	// load models
-	// -----------
-	//Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
-	//createModel(importPath);
-	//Model importModel(FileSystem::getPath(importPath));
-	//importModel.
-	//Model rockModel(outPathRock);
 	//---------------------------------------------------------------------------------------------------------
 	//				Rendering Loop,  //only close with Esc or X button           
 	//---------------------------------------------------------------------------------------------------------
@@ -261,24 +192,16 @@ int main()
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 		// don't forget to enable shader before setting uniforms
-
-
 		// view/projection transformations
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 
-		// render the loaded model
-		glm::mat4 model;
-		model = glm::translate(model, modelPos); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-
-																// also draw the lamp object
+		// also draw the lamp object
 		lampShader.use();
 		lampShader.setMat4("projection", projection);
 		lampShader.setMat4("view", view);
-		model = glm::mat4();
+		glm::mat4 model = glm::mat4();
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 		lampShader.setMat4("model", model);
@@ -317,7 +240,6 @@ int main()
 
 		currentModel.Draw(importShader);
 
-
 		if (show_settings_window)
 		{
 			ImGui::Begin("Settings", &show_settings_window);
@@ -334,14 +256,12 @@ int main()
 				ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
 				ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
 				ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
-				ImGui::Checkbox("is changing Model bool", &isChangingModel);
-				ImGui::Checkbox("is changing nanosuit Model bool", &isChangingModel2);
+				
 
 				if (ImGui::Button("Counter"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 					counter++;
 				ImGui::SameLine();
 				ImGui::Text("counter = %d", counter);
-
 
 				ImGui::Checkbox("Wireframe", &isInWireframe);
 				if (isInWireframe)
@@ -349,10 +269,7 @@ int main()
 				else
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-
-
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
 			}
 			ImGui::End();
 		}
@@ -361,19 +278,18 @@ int main()
 		{
 			ImGui::Begin("Model Settings", &show_modelSettings_window);
 			{
-
-				static float f = 0.0f;
-				static int counter = 0;
+	
 				ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
-				ImGui::SliderFloat("X-Axis", &modelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::SliderFloat("Y-Axis", &modelPos.y, -2.0f, 2.0f);
-				ImGui::SliderFloat("Z-Axis", &modelPos.z, -2.0f, 2.0f);
+				ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+				ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
+				ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
 				ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 
-
-				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-					model = glm::translate(model, modelPos);
-
+				if (ImGui::Button("Reset Position")) 
+				{       
+					importModelPos = modelZeroPos;
+					model = glm::translate(model3, importModelPos);
+				}
 			}
 			ImGui::End();
 		}
@@ -382,17 +298,16 @@ int main()
 		{
 			ImGui::Begin("Light Settings", &show_lightSettings_window);
 			{
-
-				static float f = 0.0f;
-				static int counter = 0;
 				ImGui::Text("Change Light Position");                           // Display some text (you can use a format string too)
 				ImGui::SliderFloat("X-Axis", &lightPos.x, -5.0f, 5.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				ImGui::SliderFloat("Y-Axis", &lightPos.y, -5.0f, 5.0f);
 				ImGui::SliderFloat("Z-Axis", &lightPos.z, -5.0f, 5.0f);
 
-				if (ImGui::Button("Reset Position"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-					model = glm::translate(model, zeroPos);
-
+				if (ImGui::Button("Reset Position")) 
+				{                          
+					lightPos = lightZeroPos;
+					model = glm::translate(model, lightPos);
+				}
 			}
 			ImGui::End();
 		}
@@ -417,21 +332,16 @@ int main()
 
 					isOpeningFile = true;
 
-					if (ProgramSettings::ImportedModelPath.length() > 0)ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
-					//if (path.size() > 0) ImGui::Text("Choosed Path Name : %s", path.c_str());
-					//if (fileName.size() > 0) ImGui::Text("Choosed File Name : %s", fileName.c_str());
-					//if (filter.size() > 0) ImGui::Text("Choosed Filter : %s", filter.c_str());
-
+					if (ProgramSettings::ImportedModelPath.length() > 0)
+						ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
 				}
 				ImGui::MenuItem("Save As..");
 				ImGui::MenuItem("Exit");
-				//ShowExampleMenuFile();
 				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Help"))
 			{
-				//ImGui::ShowMetricsWindow();
 				ImGui::MenuItem("Settings", NULL, &show_settings_window);
 				ImGui::MenuItem("Model Settings", NULL, &show_modelSettings_window);
 				ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
@@ -442,7 +352,6 @@ int main()
 			ImGui::EndMainMenuBar();
 
 		}
-
 
 
 		ImGui::Render();
@@ -462,12 +371,11 @@ int main()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-	// glfw: terminate, clearing all previously allocated GLFW resources.
 
 	//deallocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
 	StaticGeometry::deleteGeometry();
-
+	// glfw: terminate, clearing all previously allocated GLFW resources.
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }

@@ -32,6 +32,7 @@ public:
     vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
+	string m_path = "";
 
     /*  Functions   */
     // constructor, expects a filepath to a 3D model.
@@ -40,12 +41,27 @@ public:
         loadModel(path);
     }
 
+	Model()
+	{
+		//loadModel(path);
+	}
+
     // draws the model, and thus all its meshes
     void Draw(Shader shader)
     {
         for(unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader);
     }
+
+	void setPath(string const &path)
+	{
+		m_path = path;
+	}
+
+	string const getPath()
+	{
+		return m_path;
+	}
     
 private:
     /*  Functions   */
