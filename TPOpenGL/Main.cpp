@@ -147,22 +147,22 @@ std::string getLoadedFile()
 		{
 			case 1:
 			{
-				cout << "Selected 1: planet" << std::endl;
+				std::cout << "Selected 1: planet" << std::endl;
 				return "resources/objects/noTexture/planet.obj";
 			}
 			case 2:
 			{
-				cout << "Selected 2: Nanosuit" << std::endl;
+				std::cout << "Selected 2: Nanosuit" << std::endl;
 				return  "resources/objects/noTexture/nanosuit.obj";
 			}
 			case 3:
 			{
-				cout << "Selected: 3: rock" << std::endl;
+				std::cout << "Selected: 3: rock" << std::endl;
 				return "resources/objects/noTexture/rock.obj";
 			}
 			default:
 			{
-				cout << "Please enter a valid number!" << std::endl;
+				std::cout << "Please enter a valid number!" << std::endl;
 			}
 		}
 	}
