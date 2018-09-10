@@ -150,7 +150,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cmdStart.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="ImGuiFileDialog.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
@@ -158,8 +157,11 @@
     <ClCompile Include="imgui_impl_glfw.cpp" />
     <ClCompile Include="imgui_impl_opengl3.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MeshDecimator.cpp" />
+    <ClCompile Include="model.cpp" />
     <ClCompile Include="program_settings.cpp" />
     <ClCompile Include="static_geometry.cpp" />
+    <ClCompile Include="VecMath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cmdStart.h" />
@@ -169,14 +171,17 @@
     <ClInclude Include="imgui_impl_glfw.h" />
     <ClInclude Include="imgui_impl_opengl3.h" />
     <ClInclude Include="imgui_internal.h" />
+    <ClInclude Include="MeshDecimator.h" />
     <ClInclude Include="nfd.h" />
     <ClInclude Include="program_settings.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Simplify.h" />
     <ClInclude Include="static_geometry.h" />
     <ClInclude Include="stb_rect_pack.h" />
     <ClInclude Include="stb_textedit.h" />
     <ClInclude Include="stb_truetype.h" />
     <ClInclude Include="tinyfiledialogs.h" />
+    <ClInclude Include="VecMath.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -35,7 +35,7 @@
 //settings and camera
 #include "program_settings.h"
 #include "static_geometry.h"
-#include "cmdStart.h"
+//#include "cmdStart.h"
 //import done in code, no gui yet
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -80,12 +80,9 @@ glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
 glm::vec3 lightZeroPos(1.2f, 2.0f, 2.0f);
 glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
 
+GLFWwindow* window;
 
-
-// ------------------------------------------------------------------
-//								MAIN
-// ------------------------------------------------------------------
-int main()
+int createGLFWWindow()
 {
 	// glfw: initialize and configure
 	// ------------------------------
@@ -103,7 +100,7 @@ int main()
 
 	// glfw window creation
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Tool & Plugin: Mesh Decimator", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Tool & Plugin: Mesh Decimator", NULL, NULL);
 	// Check for Valid Context
 	if (window == nullptr) {
 		fprintf(stderr, "Failed to Create OpenGL Context");
@@ -133,6 +130,57 @@ int main()
 		return -1;
 	}
 
+	return 0;
+}
+
+std::string getLoadedFile()
+{
+	int cmdFileSelect;
+	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl;
+	std::cout << "Waiting for input..." << std::endl;
+	//std::cin >> move;
+	std::cin >> cmdFileSelect;
+
+	while (true)
+	{
+		switch (cmdFileSelect)
+		{
+			case 1:
+			{
+				cout << "Selected 1: planet" << std::endl;
+				return "resources/objects/noTexture/planet.obj";
+			}
+			case 2:
+			{
+				cout << "Selected 2: Nanosuit" << std::endl;
+				return  "resources/objects/noTexture/nanosuit.obj";
+			}
+			case 3:
+			{
+				cout << "Selected: 3: rock" << std::endl;
+				return "resources/objects/noTexture/rock.obj";
+			}
+			default:
+			{
+				cout << "Please enter a valid number!" << std::endl;
+			}
+		}
+	}
+	
+	return "";
+}
+
+// ------------------------------------------------------------------
+//								MAIN
+// ------------------------------------------------------------------
+int main()
+{
+	std::string cmdFile = getLoadedFile();
+	if (createGLFWWindow() == EXIT_FAILURE)
+	{
+		return EXIT_FAILURE;
+	}
+
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
@@ -147,32 +195,8 @@ int main()
 	
 	//uncomment for cmd file selection
 
-	std::string cmdFile;
-	int cmdFileSelect;
-	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl;
-	//std::cin >> move;
-	std::cin >> cmdFileSelect;
-	switch (cmdFileSelect) 
-	{
-		case 1: 
-		{
-			cmdFile = "resources/objects/noTexture/planet.obj";
-			cout << "Selected 1: planet" << std::endl;
-			break;
-		} 
-		case 2:
-		{
-			cmdFile = "resources/objects/noTexture/nanosuit.obj";
-			cout << "Selected 2: Nanosuit" << std::endl;
-			break;
-		} 
-		case 3:
-		{
-			cmdFile = "resources/objects/noTexture/rock.obj";
-			cout << "Selected: 3: rock" << std::endl;
-			break;
-		} 
-	}
+	
+
 	currentModel = Model(FileSystem::getPath(cmdFile));
 	currentModel.setPath(cmdFile);
 
