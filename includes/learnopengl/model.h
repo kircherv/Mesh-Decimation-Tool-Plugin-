@@ -37,63 +37,26 @@ public:
     // constructor, expects a filepath to a 3D model.
 	Model(string const &path, bool gamma = false);
 
-	Model()
-	{
-		//loadModel(path);
-	}
+	Model();
 
     // draws the model, and thus all its meshes
 	void Draw(Shader shader);
 
-	void setPath(string const &path)
-	{
-		m_path = path;
-	}
+	void setPath(string const &path);
 
-	string const getPath()
-	{
-		return m_path;
-	}
+
+	string const getPath();
+
     
 private:
     /*  Functions   */
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(string const &path)
-    {
-        // read file via ASSIMP
-        Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-        // check for errors
-        if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
-        {
-            cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
-            return;
-        }
-        // retrieve the directory path of the filepath
-        directory = path.substr(0, path.find_last_of('/'));
-
-        // process ASSIMP's root node recursively
-        processNode(scene->mRootNode, scene);
-    }
+	void loadModel(string const &path);
+   
 
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-    void processNode(aiNode *node, const aiScene *scene)
-    {
-        // process each mesh located at the current node
-        for(unsigned int i = 0; i < node->mNumMeshes; i++)
-        {
-            // the node object only contains indices to index the actual objects in the scene. 
-            // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(processMesh(mesh, scene));
-        }
-        // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-        for(unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            processNode(node->mChildren[i], scene);
-        }
-
-    }
+	void processNode(aiNode *node, const aiScene *scene);
+ 
 
     Mesh processMesh(aiMesh *mesh, const aiScene *scene)
     {
