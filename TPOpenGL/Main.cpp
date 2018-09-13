@@ -33,9 +33,10 @@
 #include "resource.h"
 #include <iostream>
 //settings and camera
+
 #include "program_settings.h"
 #include "static_geometry.h"
-#include "cmdStart.h"
+//#include "cmdStart.h"
 //import done in code, no gui yet
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -80,12 +81,9 @@ glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
 glm::vec3 lightZeroPos(1.2f, 2.0f, 2.0f);
 glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
 
+GLFWwindow* window;
 
-
-// ------------------------------------------------------------------
-//								MAIN
-// ------------------------------------------------------------------
-int main()
+int createGLFWWindow()
 {
 	// glfw: initialize and configure
 	// ------------------------------
@@ -101,9 +99,9 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
 #endif
 
-	// glfw window creation
-	// --------------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Tool & Plugin: Mesh Decimator", NULL, NULL);
+														 // glfw window creation
+														 // --------------------
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Tool & Plugin: Mesh Decimator", NULL, NULL);
 	// Check for Valid Context
 	if (window == nullptr) {
 		fprintf(stderr, "Failed to Create OpenGL Context");
@@ -133,6 +131,57 @@ int main()
 		return -1;
 	}
 
+	return 0;
+}
+
+std::string getLoadedFile()
+{
+	int cmdFileSelect;
+	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl;
+	std::cout << "Waiting for input..." << std::endl;
+	//std::cin >> move;
+	std::cin >> cmdFileSelect;
+
+	while (true)
+	{
+		switch (cmdFileSelect)
+		{
+		case 1:
+		{
+			std::cout << "Selected 1: planet" << std::endl;
+			return "resources/objects/noTexture/planet.obj";
+		}
+		case 2:
+		{
+			std::cout << "Selected 2: Nanosuit" << std::endl;
+			return  "resources/objects/noTexture/nanosuit.obj";
+		}
+		case 3:
+		{
+			std::cout << "Selected: 3: rock" << std::endl;
+			return "resources/objects/noTexture/rock.obj";
+		}
+		default:
+		{
+			std::cout << "Please enter a valid number!" << std::endl;
+		}
+		}
+	}
+
+	return "";
+}
+
+// ------------------------------------------------------------------
+//								MAIN
+// ------------------------------------------------------------------
+int main()
+{
+	std::string cmdFile = getLoadedFile();
+	if (createGLFWWindow() == EXIT_FAILURE)
+	{
+		return EXIT_FAILURE;
+	}
+
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
@@ -144,42 +193,18 @@ int main()
 
 	StaticGeometry::load();
 
-	
+
 	//uncomment for cmd file selection
 
-	std::string cmdFile;
-	int cmdFileSelect;
-	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl;
-	//std::cin >> move;
-	std::cin >> cmdFileSelect;
-	switch (cmdFileSelect) 
-	{
-		case 1: 
-		{
-			cmdFile = "resources/objects/noTexture/planet.obj";
-			cout << "Selected 1: planet" << std::endl;
-			break;
-		} 
-		case 2:
-		{
-			cmdFile = "resources/objects/noTexture/nanosuit.obj";
-			cout << "Selected 2: Nanosuit" << std::endl;
-			break;
-		} 
-		case 3:
-		{
-			cmdFile = "resources/objects/noTexture/rock.obj";
-			cout << "Selected: 3: rock" << std::endl;
-			break;
-		} 
-	}
+
+
 	currentModel = Model(FileSystem::getPath(cmdFile));
 	currentModel.setPath(cmdFile);
 
 	//tried to refactor
 	//CmdStart startcmd;
 	//startcmd.selectObj();
-	
+
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
 
@@ -287,12 +312,12 @@ int main()
 			ImGui::Begin("Settings", &show_settings_window);
 			{
 
-			
+
 				ImGui::Text("Settings");                           // Display some text (you can use a format string too)
 
 				ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
-				
-				
+
+
 				ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
 				ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
 				ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
@@ -323,17 +348,22 @@ int main()
 		{
 			ImGui::Begin("Model Settings", &show_modelSettings_window);
 			{
-	
+
 				ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
 				ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
 				ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
 				ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 
-				if (ImGui::Button("Reset Position")) 
-				{       
+				if (ImGui::Button("Reset Position"))
+				{
 					importModelPos = modelZeroPos;
 					model = glm::translate(model3, importModelPos);
+				}
+
+				if (ImGui::Button("Decimate Model"))
+				{
+					
 				}
 			}
 			ImGui::End();
@@ -348,8 +378,8 @@ int main()
 				ImGui::SliderFloat("Y-Axis", &lightPos.y, -5.0f, 5.0f);
 				ImGui::SliderFloat("Z-Axis", &lightPos.z, -5.0f, 5.0f);
 
-				if (ImGui::Button("Reset Position")) 
-				{                          
+				if (ImGui::Button("Reset Position"))
+				{
 					lightPos = lightZeroPos;
 					model = glm::translate(model, lightPos);
 				}

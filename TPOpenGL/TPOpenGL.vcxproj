@@ -157,6 +157,7 @@
     <ClCompile Include="imgui_impl_glfw.cpp" />
     <ClCompile Include="imgui_impl_opengl3.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="model.cpp" />
     <ClCompile Include="program_settings.cpp" />
     <ClCompile Include="static_geometry.cpp" />
   </ItemGroup>
