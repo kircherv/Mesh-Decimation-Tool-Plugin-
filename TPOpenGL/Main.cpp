@@ -266,6 +266,8 @@ void startMyGui()
 			{
 
 			}
+
+			ImGui::ProgressBar(1.0f);
 		}
 		ImGui::End();
 	}
