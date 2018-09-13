@@ -42,9 +42,6 @@
     <ClCompile Include="ImGuiFileDialog.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="cmdStart.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui.h">
@@ -87,9 +84,6 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="dirent.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="cmdStart.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
