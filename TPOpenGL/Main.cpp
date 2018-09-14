@@ -32,6 +32,7 @@
 
 #include "program_settings.h"
 #include "static_geometry.h"
+#include "mesh_decimator.h"
 //import done in code, no gui yet
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -147,7 +148,7 @@ int createGLFWWindow()
 std::string getLoadedFile()
 {
 	int cmdFileSelect;
-	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl;
+	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl << "write 4 for tiger " << std::endl;
 	std::cout << "Waiting for input..." << std::endl;
 	//std::cin >> move;
 	std::cin >> cmdFileSelect;
@@ -170,6 +171,11 @@ std::string getLoadedFile()
 		{
 			std::cout << "Selected: 3: rock" << std::endl;
 			return "resources/objects/noTexture/rock.obj";
+		}
+		case 4:
+		{
+			std::cout << "Selected: 4: tiger.off" << std::endl;
+			return "resources/objects/noTexture/tiger.off";
 		}
 		default:
 		{
@@ -259,7 +265,8 @@ void startMyGui()
 
 			if (ImGui::Button("Decimate Model"))
 			{
-
+				MeshDecimator::setInputModel(&currentModel);
+				currentModel = *MeshDecimator::getDecimatedModel(0.75);
 			}
 			//ImGui::SliderFloat("float", &float, 0.0f, 1.0f);
 			ImGui::ProgressBar(0.1f);
