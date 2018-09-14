@@ -11,14 +11,10 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
-
-
 //tini dialog
 #include "tinyfiledialogs.h"
 #include "nfd.h"
 #include "ImGuiFileDialog.h"
-
 
 //filesystem movement and import
 #include <learnopengl/filesystem.h>
@@ -36,7 +32,6 @@
 
 #include "program_settings.h"
 #include "static_geometry.h"
-//#include "cmdStart.h"
 //import done in code, no gui yet
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -266,8 +261,8 @@ void startMyGui()
 			{
 
 			}
-
-			ImGui::ProgressBar(1.0f);
+			//ImGui::SliderFloat("float", &float, 0.0f, 1.0f);
+			ImGui::ProgressBar(0.1f);
 		}
 		ImGui::End();
 	}
@@ -335,6 +330,40 @@ void startMyGui()
 
 }
 
+void renderStuff(Shader lampShader, Shader importShader) 
+{
+	// view/projection transformations
+	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+	glm::mat4 view = camera.GetViewMatrix();
+
+	// don't forget to enable shader before setting uniforms
+	//draw the lamp object
+	lampShader.use();
+	lampShader.setMat4("projection", projection);
+	lampShader.setMat4("view", view);
+	glm::mat4 model;
+	model = glm::translate(model, lightPos);
+	model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+	lampShader.setMat4("model", model);
+
+	StaticGeometry::renderLightCube();
+
+	importShader.use();
+	importShader.setVec3("objectColor", objectColor);
+	importShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	importShader.setVec3("lightPos", lightPos);
+	importShader.setVec3("viewPos", camera.Position);
+	importShader.setMat4("projection", projection);
+	importShader.setMat4("view", view);
+	glm::mat4 model3;
+	model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
+	model3 = glm::scale(model3, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+	importShader.setMat4("model", model3);
+
+
+	currentModel.Draw(importShader);
+}
+
 // ------------------------------------------------------------------
 //								MAIN
 // ------------------------------------------------------------------
@@ -357,12 +386,9 @@ int main()
 
 	StaticGeometry::load();
 
+	//program opens in cmd mode, here we set the default path
 	currentModel = Model(FileSystem::getPath(cmdFile));
 	currentModel.setPath(cmdFile);
-
-	//tried to refactor
-	//CmdStart startcmd;
-	//startcmd.selectObj();
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
@@ -375,7 +401,7 @@ int main()
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-														   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
@@ -410,36 +436,9 @@ int main()
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// view/projection transformations
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		glm::mat4 view = camera.GetViewMatrix();
-
-		// don't forget to enable shader before setting uniforms
-		//draw the lamp object
-		lampShader.use();
-		lampShader.setMat4("projection", projection);
-		lampShader.setMat4("view", view);
-		glm::mat4 model;
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-		lampShader.setMat4("model", model);
-
-		StaticGeometry::renderLightCube();
-
-		importShader.use();
-		importShader.setVec3("objectColor", objectColor);
-		importShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-		importShader.setVec3("lightPos", lightPos);
-		importShader.setVec3("viewPos", camera.Position);
-		importShader.setMat4("projection", projection);
-		importShader.setMat4("view", view);
-		glm::mat4 model3;
-		model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
-		model3 = glm::scale(model3, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-		importShader.setMat4("model", model3);
-
-
-		currentModel.Draw(importShader);
+	
+		//render lamp and import object
+		renderStuff(lampShader, importShader);
 
 		//my gui settings
 		startMyGui();
