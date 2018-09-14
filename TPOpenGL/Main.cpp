@@ -82,9 +82,6 @@ float lastFrame = 0.0f;
 
 //model
 Model currentModel;
-
-
-
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
@@ -92,7 +89,11 @@ glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
 glm::vec3 lightZeroPos(1.2f, 2.0f, 2.0f);
 glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
 
+//context
 GLFWwindow* window;
+
+//Mesh Decimation
+float decimatePercentage = 0.75f;
 
 int createGLFWWindow()
 {
@@ -263,13 +264,27 @@ void startMyGui()
 				//model = glm::translate(model3, importModelPos);
 			}
 
-			if (ImGui::Button("Decimate Model"))
+			if (ImGui::Button("Model decimation"))
 			{
 				MeshDecimator::setInputModel(&currentModel);
-				currentModel = *MeshDecimator::getDecimatedModel(0.75);
+				currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
 			}
-			//ImGui::SliderFloat("float", &float, 0.0f, 1.0f);
-			ImGui::ProgressBar(0.1f);
+			ImGuiDir upButton = ImGuiDir(2);
+			if (ImGui::ArrowButton("Decimate Model:", upButton))
+			{
+				if(decimatePercentage < 1.0f)
+					decimatePercentage += 0.01f;
+			}
+			
+			ImGuiDir downButton = ImGuiDir(3);
+			if (ImGui::ArrowButton("Decimate Model:", downButton))
+			{
+				if(decimatePercentage > 0.0f)
+					decimatePercentage -= 0.01f;
+			}
+			ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f);
+			ImGui::ProgressBar(decimatePercentage);
+			
 		}
 		ImGui::End();
 	}
