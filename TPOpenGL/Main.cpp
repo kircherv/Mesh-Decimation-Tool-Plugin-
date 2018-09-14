@@ -195,7 +195,7 @@ void startMyGui()
 				std::cout << "openButton ok and model " << ProgramSettings::ImportedModelPath << " has been imported!" << endl;
 
 				currentModel = Model(ProgramSettings::ImportedModelPath);
-				currentModel.setPath(ProgramSettings::ImportedModelPath);
+				//currentModel.setPath(ProgramSettings::ImportedModelPath);
 			}
 
 			isOpeningFile = false;
@@ -328,6 +328,27 @@ void startMyGui()
 
 	}
 
+	ImGui::Render();
+
+}
+
+//context init,version, style, flags
+void configGui() 
+{
+	//binding
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+														   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init();
+
+	// Setup style
+	//ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+	ImGui::StyleColorsLight();
 }
 
 void renderStuff(Shader lampShader, Shader importShader) 
@@ -388,7 +409,7 @@ int main()
 
 	//program opens in cmd mode, here we set the default path
 	currentModel = Model(FileSystem::getPath(cmdFile));
-	currentModel.setPath(cmdFile);
+	//currentModel.setPath(cmdFile);
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
@@ -396,20 +417,7 @@ int main()
 	//---------------------------------------------------------------------------------------------------------
 	//		Gui Setup
 	//---------------------------------------------------------------------------------------------------------
-	//binding
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
-
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init();
-
-	// Setup style
-	//ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
-	ImGui::StyleColorsLight();
+	configGui();
 
 	//---------------------------------------------------------------------------------------------------------
 	//				Rendering Loop,  //only close with Esc or X button           
@@ -442,9 +450,7 @@ int main()
 
 		//my gui settings
 		startMyGui();
-
-
-		ImGui::Render();
+		
 		//next line is the actual render , and it has to be before the buffers swap
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
