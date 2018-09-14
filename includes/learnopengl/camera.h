@@ -65,6 +65,11 @@ public:
     {
         return glm::lookAt(Position, Position + Front, Up);
     }
+	// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
+	glm::mat4 lockOnModel(glm::vec3 modelPos)
+	{
+		return glm::lookAt(Position, modelPos, Up);
+	}
 
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)

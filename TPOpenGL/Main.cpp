@@ -57,10 +57,12 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
-
+glm::mat4 view;
+glm::mat4 projection;
 //ui
 bool inUI = true;
 bool cameraMode = false;
+bool lockOn = false;
 bool fileOpened = false;
 bool isInWireframe = false;
 bool isOpeningFile = false;
@@ -245,6 +247,12 @@ void startMyGui()
 				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			}
 			ImGui::Checkbox("Show About Window", &show_app_about);
+			ImGui::Checkbox("lock on camera", &lockOn);
+			if(lockOn)
+			{				
+				view = camera.lockOnModel(importModelPos);
+			}
+			
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		}
 		ImGui::End();
@@ -288,7 +296,11 @@ void startMyGui()
 					decimatePercentage += 0.01f;
 			}
 			
-			ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f);
+			if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f)) 
+			{
+				//MeshDecimator::setInputModel(&currentModel);
+				//currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
+			}
 			ImGui::ProgressBar(decimatePercentage);
 			
 		}
@@ -382,8 +394,10 @@ void configGui()
 void renderStuff(Shader lampShader, Shader importShader) 
 {
 	// view/projection transformations
-	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-	glm::mat4 view = camera.GetViewMatrix();
+	//do they have to be created every frame or is it okay to only change its definition?
+	projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+	if(!lockOn)
+		view = camera.GetViewMatrix();
 
 	// don't forget to enable shader before setting uniforms
 	//draw the lamp object
@@ -396,7 +410,7 @@ void renderStuff(Shader lampShader, Shader importShader)
 	lampShader.setMat4("model", model);
 
 	StaticGeometry::renderLightCube();
-
+	
 	importShader.use();
 	importShader.setVec3("objectColor", objectColor);
 	importShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
