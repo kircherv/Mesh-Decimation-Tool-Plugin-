@@ -11,14 +11,10 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
-
-
 //tini dialog
 #include "tinyfiledialogs.h"
 #include "nfd.h"
 #include "ImGuiFileDialog.h"
-
 
 //filesystem movement and import
 #include <learnopengl/filesystem.h>
@@ -36,7 +32,6 @@
 
 #include "program_settings.h"
 #include "static_geometry.h"
-//#include "cmdStart.h"
 //import done in code, no gui yet
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -66,12 +61,27 @@ bool fileOpened = false;
 bool isInWireframe = false;
 bool isOpeningFile = false;
 
+//bool show_demo_window = true;
+bool show_settings_window = true;
+static bool show_app_metrics = false;
+static bool show_app_style_editor = false;
+static bool show_app_about = false;
+bool show_modelSettings_window = false;
+bool show_lightSettings_window = false;
+
+
+ImVec4 clear_color = ImVec4(0.24f, 0.4f, 0.9f, 1.0f);
+
+//glm::mat4 model;
+//glm::mat4 model3;
+
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 //model
 Model currentModel;
+
 
 
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
@@ -171,6 +181,210 @@ std::string getLoadedFile()
 	return "";
 }
 
+void startMyGui()
+{
+	//open new object
+	if (isOpeningFile)
+	{
+		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", ""))
+		{
+			if (ImGuiFileDialog::Instance()->IsOk == true)
+			{
+				ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
+
+				std::cout << "openButton ok and model " << ProgramSettings::ImportedModelPath << " has been imported!" << endl;
+
+				currentModel = Model(ProgramSettings::ImportedModelPath);
+				//currentModel.setPath(ProgramSettings::ImportedModelPath);
+			}
+
+			isOpeningFile = false;
+		}
+	}
+
+	//all gui windows
+	if (show_settings_window)
+	{
+		ImGui::Begin("Settings", &show_settings_window);
+		{
+
+
+			ImGui::Text("Settings");                           // Display some text (you can use a format string too)
+
+			ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
+
+
+			ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
+			ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
+			ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
+			ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
+			ImGui::Checkbox("Wireframe", &isInWireframe);
+			if (isInWireframe)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			ImGui::Checkbox("Camera Mode", &cameraMode);
+			if (cameraMode) {
+				inUI = false;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			}
+			else {
+
+				inUI = true;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+			ImGui::Checkbox("Show About Window", &show_app_about);
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		}
+		ImGui::End();
+	}
+
+	if (show_modelSettings_window)
+	{
+		ImGui::Begin("Model Settings", &show_modelSettings_window);
+		{
+
+			ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
+			ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
+			ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
+			ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
+
+			if (ImGui::Button("Reset Position"))
+			{
+				importModelPos = modelZeroPos;
+				//model = glm::translate(model3, importModelPos);
+			}
+
+			if (ImGui::Button("Decimate Model"))
+			{
+
+			}
+			//ImGui::SliderFloat("float", &float, 0.0f, 1.0f);
+			ImGui::ProgressBar(0.1f);
+		}
+		ImGui::End();
+	}
+
+	if (show_lightSettings_window)
+	{
+		ImGui::Begin("Light Settings", &show_lightSettings_window);
+		{
+			ImGui::Text("Change Light Position");                           // Display some text (you can use a format string too)
+			ImGui::SliderFloat("X-Axis", &lightPos.x, -5.0f, 5.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Y-Axis", &lightPos.y, -5.0f, 5.0f);
+			ImGui::SliderFloat("Z-Axis", &lightPos.z, -5.0f, 5.0f);
+
+			if (ImGui::Button("Reset Position"))
+			{
+				lightPos = lightZeroPos;
+				//model = glm::translate(model, lightPos);
+			}
+		}
+		ImGui::End();
+	}
+
+	if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
+	if (show_app_style_editor) { ImGui::Begin("Style Editor", &show_app_style_editor); ImGui::ShowStyleEditor(); ImGui::End(); }
+	if (show_app_about)
+	{
+		ImGui::Begin("AboutMesh Decimator", &show_app_about, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("Mesh Decimator, %s", ImGui::GetVersion());
+		ImGui::Separator();
+		ImGui::Text("By Valentin Kircher Bautista.");
+		ImGui::Text("Mesh Decimator is licensed under the MIT License, see LICENSE for more information.");
+		ImGui::End();
+	}
+
+	ImGui::BeginMainMenuBar();
+	{
+		if (ImGui::BeginMenu("Menu"))
+		{
+			if (ImGui::Button("Open Files")) {
+
+				isOpeningFile = true;
+
+				if (ProgramSettings::ImportedModelPath.length() > 0)
+					ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
+			}
+			ImGui::MenuItem("Save As..");
+			ImGui::MenuItem("Exit");
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Help"))
+		{
+			ImGui::Checkbox("Camera Mode", &cameraMode);
+			ImGui::MenuItem("Settings", NULL, &show_settings_window);
+			ImGui::MenuItem("Model Settings", NULL, &show_modelSettings_window);
+			ImGui::Checkbox("Light Settings", &show_lightSettings_window);
+			ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
+			ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
+			ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+
+	}
+
+	ImGui::Render();
+
+}
+
+//context init,version, style, flags
+void configGui()
+{
+	//binding
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+														   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init();
+
+	// Setup style
+	//ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+	ImGui::StyleColorsLight();
+}
+
+void renderStuff(Shader lampShader, Shader importShader)
+{
+	// view/projection transformations
+	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+	glm::mat4 view = camera.GetViewMatrix();
+
+	// don't forget to enable shader before setting uniforms
+	//draw the lamp object
+	lampShader.use();
+	lampShader.setMat4("projection", projection);
+	lampShader.setMat4("view", view);
+	glm::mat4 model;
+	model = glm::translate(model, lightPos);
+	model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+	lampShader.setMat4("model", model);
+
+	StaticGeometry::renderLightCube();
+
+	importShader.use();
+	importShader.setVec3("objectColor", objectColor);
+	importShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	importShader.setVec3("lightPos", lightPos);
+	importShader.setVec3("viewPos", camera.Position);
+	importShader.setMat4("projection", projection);
+	importShader.setMat4("view", view);
+	glm::mat4 model3;
+	model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
+	model3 = glm::scale(model3, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+	importShader.setMat4("model", model3);
+
+
+	currentModel.Draw(importShader);
+}
+
 // ------------------------------------------------------------------
 //								MAIN
 // ------------------------------------------------------------------
@@ -193,17 +407,9 @@ int main()
 
 	StaticGeometry::load();
 
-
-	//uncomment for cmd file selection
-
-
-
+	//program opens in cmd mode, here we set the default path
 	currentModel = Model(FileSystem::getPath(cmdFile));
-	currentModel.setPath(cmdFile);
-
-	//tried to refactor
-	//CmdStart startcmd;
-	//startcmd.selectObj();
+	//currentModel.setPath(cmdFile);
 
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
@@ -211,28 +417,7 @@ int main()
 	//---------------------------------------------------------------------------------------------------------
 	//		Gui Setup
 	//---------------------------------------------------------------------------------------------------------
-	//binding
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-														   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
-
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init();
-	//bool show_demo_window = true;
-	bool show_settings_window = true;
-	static bool show_app_metrics = false;
-	static bool show_app_style_editor = false;
-	static bool show_app_about = false;
-	bool show_modelSettings_window = false;
-	bool show_lightSettings_window = false;
-
-	// Setup style
-	//ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
-	ImGui::StyleColorsLight();
-	ImVec4 clear_color = ImVec4(0.24f, 0.4f, 0.9f, 1.0f);
+	configGui();
 
 	//---------------------------------------------------------------------------------------------------------
 	//				Rendering Loop,  //only close with Esc or X button           
@@ -259,179 +444,13 @@ int main()
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// don't forget to enable shader before setting uniforms
-		// view/projection transformations
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		glm::mat4 view = camera.GetViewMatrix();
 
-		// also draw the lamp object
-		lampShader.use();
-		lampShader.setMat4("projection", projection);
-		lampShader.setMat4("view", view);
-		glm::mat4 model = glm::mat4();
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-		lampShader.setMat4("model", model);
+		//render lamp and import object
+		renderStuff(lampShader, importShader);
 
-		StaticGeometry::renderLightCube();
+		//my gui settings
+		startMyGui();
 
-		importShader.use();
-		importShader.setVec3("objectColor", objectColor);
-		importShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-		importShader.setVec3("lightPos", lightPos);
-		importShader.setVec3("viewPos", camera.Position);
-		importShader.setMat4("projection", projection);
-		importShader.setMat4("view", view);
-		glm::mat4 model3;
-		model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
-		model3 = glm::scale(model3, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-		importShader.setMat4("model", model3);
-
-		if (isOpeningFile)
-		{
-			if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", ""))
-			{
-				if (ImGuiFileDialog::Instance()->IsOk == true)
-				{
-					ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
-
-					std::cout << "openButton ok and model " << ProgramSettings::ImportedModelPath << " has been imported!" << endl;
-
-					currentModel = Model(ProgramSettings::ImportedModelPath);
-					currentModel.setPath(ProgramSettings::ImportedModelPath);
-				}
-
-				isOpeningFile = false;
-			}
-		}
-
-		currentModel.Draw(importShader);
-
-		if (show_settings_window)
-		{
-			ImGui::Begin("Settings", &show_settings_window);
-			{
-
-
-				ImGui::Text("Settings");                           // Display some text (you can use a format string too)
-
-				ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
-
-
-				ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
-				ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
-				ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
-				ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
-				ImGui::Checkbox("Wireframe", &isInWireframe);
-				if (isInWireframe)
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				else
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-				ImGui::Checkbox("Camera Mode", &cameraMode);
-				if (cameraMode) {
-					inUI = false;
-					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				}
-				else {
-
-					inUI = true;
-					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				}
-				ImGui::Checkbox("Show About Window", &show_app_about);
-				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			}
-			ImGui::End();
-		}
-
-		if (show_modelSettings_window)
-		{
-			ImGui::Begin("Model Settings", &show_modelSettings_window);
-			{
-
-				ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
-				ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
-				ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
-				ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
-
-				if (ImGui::Button("Reset Position"))
-				{
-					importModelPos = modelZeroPos;
-					model = glm::translate(model3, importModelPos);
-				}
-
-				if (ImGui::Button("Decimate Model"))
-				{
-					
-				}
-			}
-			ImGui::End();
-		}
-
-		if (show_lightSettings_window)
-		{
-			ImGui::Begin("Light Settings", &show_lightSettings_window);
-			{
-				ImGui::Text("Change Light Position");                           // Display some text (you can use a format string too)
-				ImGui::SliderFloat("X-Axis", &lightPos.x, -5.0f, 5.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::SliderFloat("Y-Axis", &lightPos.y, -5.0f, 5.0f);
-				ImGui::SliderFloat("Z-Axis", &lightPos.z, -5.0f, 5.0f);
-
-				if (ImGui::Button("Reset Position"))
-				{
-					lightPos = lightZeroPos;
-					model = glm::translate(model, lightPos);
-				}
-			}
-			ImGui::End();
-		}
-
-		if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
-		if (show_app_style_editor) { ImGui::Begin("Style Editor", &show_app_style_editor); ImGui::ShowStyleEditor(); ImGui::End(); }
-		if (show_app_about)
-		{
-			ImGui::Begin("AboutMesh Decimator", &show_app_about, ImGuiWindowFlags_AlwaysAutoResize);
-			ImGui::Text("Mesh Decimator, %s", ImGui::GetVersion());
-			ImGui::Separator();
-			ImGui::Text("By Valentin Kircher Bautista.");
-			ImGui::Text("Mesh Decimator is licensed under the MIT License, see LICENSE for more information.");
-			ImGui::End();
-		}
-
-		ImGui::BeginMainMenuBar();
-		{
-			if (ImGui::BeginMenu("Menu"))
-			{
-				if (ImGui::Button("Open Files")) {
-
-					isOpeningFile = true;
-
-					if (ProgramSettings::ImportedModelPath.length() > 0)
-						ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
-				}
-				ImGui::MenuItem("Save As..");
-				ImGui::MenuItem("Exit");
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Help"))
-			{
-				ImGui::Checkbox("Camera Mode", &cameraMode);
-				ImGui::MenuItem("Settings", NULL, &show_settings_window);
-				ImGui::MenuItem("Model Settings", NULL, &show_modelSettings_window);
-				ImGui::Checkbox("Light Settings", &show_lightSettings_window);
-				ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
-				ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
-				ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
-				ImGui::EndMenu();
-			}
-			ImGui::EndMainMenuBar();
-
-		}
-
-
-		ImGui::Render();
 		//next line is the actual render , and it has to be before the buffers swap
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
