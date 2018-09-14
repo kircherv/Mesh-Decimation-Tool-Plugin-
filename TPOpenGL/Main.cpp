@@ -269,19 +269,22 @@ void startMyGui()
 				MeshDecimator::setInputModel(&currentModel);
 				currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
 			}
-			ImGuiDir upButton = ImGuiDir(2);
-			if (ImGui::ArrowButton("Decimate Model:", upButton))
-			{
-				if(decimatePercentage < 1.0f)
-					decimatePercentage += 0.01f;
-			}
-			
+
+			//only the first of the buttons works, no matter which you set
 			ImGuiDir downButton = ImGuiDir(3);
 			if (ImGui::ArrowButton("Decimate Model:", downButton))
 			{
 				if(decimatePercentage > 0.0f)
 					decimatePercentage -= 0.01f;
 			}
+
+			ImGuiDir upButton = ImGuiDir(2);
+			if (ImGui::ArrowButton("Decimate Model:", 2))
+			{
+				//if(decimatePercentage < 1.0f)
+					decimatePercentage += 0.01f;
+			}
+			
 			ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f);
 			ImGui::ProgressBar(decimatePercentage);
 			
