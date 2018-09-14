@@ -6,21 +6,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//imgui
+//imgui-> GUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-//tini dialog
+//tini dialog -> Import/export
 #include "tinyfiledialogs.h"
 #include "nfd.h"
 #include "ImGuiFileDialog.h"
 
-//filesystem movement and import
+//filesystem, movement and import
 #include <learnopengl/filesystem.h>
-#include <learnopengl/shader_m.h>
-#include <learnopengl/camera.h>
-#include <learnopengl/model.h>
+
 
 //system
 #include <stdio.h>
@@ -29,17 +27,23 @@
 #include "resource.h"
 #include <iostream>
 //settings and camera
-
+#include <learnopengl/shader_m.h>
+#include <learnopengl/camera.h>
+#include <learnopengl/model.h>
 #include "program_settings.h"
 #include "static_geometry.h"
-//import done in code, no gui yet
+#include "mesh_decimator.h"
+
+// ------------------------------------------------------------------
+//								DECLARATIONS
+// ------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 //------------------------------------------------------------------
-// settings
+// settings & VARIABLES
 //------------------------------------------------------------------
 static void glfw_error_callback(int error, const char* description)
 {
@@ -69,21 +73,13 @@ static bool show_app_about = false;
 bool show_modelSettings_window = false;
 bool show_lightSettings_window = false;
 
-
 ImVec4 clear_color = ImVec4(0.24f, 0.4f, 0.9f, 1.0f);
-
-//glm::mat4 model;
-//glm::mat4 model3;
-
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 //model
 Model currentModel;
-
-
-
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
@@ -91,8 +87,16 @@ glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
 glm::vec3 lightZeroPos(1.2f, 2.0f, 2.0f);
 glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
 
+//context
 GLFWwindow* window;
 
+//Mesh Decimation
+float decimatePercentage = 0.75f;
+
+// ------------------------------------------------------------------
+//								METHODS
+// ------------------------------------------------------------------
+//contextCreation
 int createGLFWWindow()
 {
 	// glfw: initialize and configure
@@ -144,10 +148,11 @@ int createGLFWWindow()
 	return 0;
 }
 
+//for program start, default objects for cmd load
 std::string getLoadedFile()
 {
 	int cmdFileSelect;
-	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl;
+	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl << "write 4 for tiger " << std::endl;
 	std::cout << "Waiting for input..." << std::endl;
 	//std::cin >> move;
 	std::cin >> cmdFileSelect;
@@ -171,6 +176,11 @@ std::string getLoadedFile()
 			std::cout << "Selected: 3: rock" << std::endl;
 			return "resources/objects/noTexture/rock.obj";
 		}
+		case 4:
+		{
+			std::cout << "Selected: 4: tiger.off" << std::endl;
+			return "resources/objects/noTexture/tiger.off";
+		}
 		default:
 		{
 			std::cout << "Please enter a valid number!" << std::endl;
@@ -180,7 +190,7 @@ std::string getLoadedFile()
 
 	return "";
 }
-
+//ui content: buttons,sliders,..
 void startMyGui()
 {
 	//open new object
@@ -257,12 +267,30 @@ void startMyGui()
 				//model = glm::translate(model3, importModelPos);
 			}
 
-			if (ImGui::Button("Decimate Model"))
+			if (ImGui::Button("Model decimation"))
 			{
-
+				MeshDecimator::setInputModel(&currentModel);
+				currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
 			}
-			//ImGui::SliderFloat("float", &float, 0.0f, 1.0f);
-			ImGui::ProgressBar(0.1f);
+
+			//only the first of the buttons works, no matter which you set
+			//ImGuiDir downButton = ImGuiDir(3);  3 is down in the enum
+			if (ImGui::ArrowButton("Decimate Model:", 3))
+			{
+				if(decimatePercentage > 0.0f)
+					decimatePercentage -= 0.01f;
+			}
+
+			//ImGuiDir upButton = ImGuiDir(2);  2 is up in the enum
+			if (ImGui::ArrowButton("Decimate Model:", 2))
+			{
+				//if(decimatePercentage < 1.0f)
+					decimatePercentage += 0.01f;
+			}
+			
+			ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f);
+			ImGui::ProgressBar(decimatePercentage);
+			
 		}
 		ImGui::End();
 	}
@@ -333,7 +361,7 @@ void startMyGui()
 }
 
 //context init,version, style, flags
-void configGui()
+void configGui() 
 {
 	//binding
 	IMGUI_CHECKVERSION();
@@ -350,8 +378,8 @@ void configGui()
 	//ImGui::StyleColorsClassic();
 	ImGui::StyleColorsLight();
 }
-
-void renderStuff(Shader lampShader, Shader importShader)
+//render lamp and import object
+void renderStuff(Shader lampShader, Shader importShader) 
 {
 	// view/projection transformations
 	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -390,6 +418,7 @@ void renderStuff(Shader lampShader, Shader importShader)
 // ------------------------------------------------------------------
 int main()
 {
+	//cmd program start
 	std::string cmdFile = getLoadedFile();
 	if (createGLFWWindow() == EXIT_FAILURE)
 	{
@@ -397,14 +426,13 @@ int main()
 	}
 
 	// configure global opengl state
-	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
 
 	// build and compile shaders
-	// -------------------------
 	Shader importShader("shaders/2.2.basic_lightingImport.vs", "shaders/2.2.basic_lightingImport.fs");
 	Shader lampShader("shaders/2.2.lamp.vs", "shaders/2.2.lamp.fs");
 
+	//lamp object
 	StaticGeometry::load();
 
 	//program opens in cmd mode, here we set the default path
@@ -414,9 +442,7 @@ int main()
 	//output in console Opengl version
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
 
-	//---------------------------------------------------------------------------------------------------------
-	//		Gui Setup
-	//---------------------------------------------------------------------------------------------------------
+	//Gui Setup
 	configGui();
 
 	//---------------------------------------------------------------------------------------------------------
@@ -425,7 +451,6 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
-		// --------------------
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
@@ -436,21 +461,19 @@ int main()
 		ImGui::NewFrame();
 
 		// input
-		// -----
 		processInput(window);
 
 		// render
-		// ------
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
+	
 		//render lamp and import object
 		renderStuff(lampShader, importShader);
 
 		//my gui settings
 		startMyGui();
-
+		
 		//next line is the actual render , and it has to be before the buffers swap
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -462,19 +485,21 @@ int main()
 
 	}
 	// ------------------------------------------------------------------
-	//		Cleanup
+	//		Cleanup: deallocate all resources once they've outlived their purpose
 	// ------------------------------------------------------------------
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	//deallocate all resources once they've outlived their purpose:
-	// ------------------------------------------------------------------------
 	StaticGeometry::deleteGeometry();
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }
+
+// ------------------------------------------------------------------
+//		KEYBOARD & MOUSE EVENTS
+// ------------------------------------------------------------------
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------

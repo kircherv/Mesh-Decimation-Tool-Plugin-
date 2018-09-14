@@ -45,6 +45,18 @@
     <ClCompile Include="model.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="my_gui.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="progmesh.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="vector.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh_decimator.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui.h">
@@ -87,6 +99,21 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="dirent.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="my_gui.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="progmesh.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="list.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="vector.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh_decimator.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
