@@ -84,6 +84,8 @@ float lastFrame = 0.0f;
 
 //model
 Model currentModel;
+Model outputModel;
+
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
@@ -209,7 +211,7 @@ void startMyGui()
 				std::cout << "openButton ok and model " << ProgramSettings::ImportedModelPath << " has been imported!" << endl;
 
 				currentModel = Model(ProgramSettings::ImportedModelPath);
-				//currentModel.setPath(ProgramSettings::ImportedModelPath);
+				MeshDecimator::setInputModel(&currentModel, &outputModel);
 			}
 
 			isOpeningFile = false;
@@ -307,8 +309,7 @@ void startMyGui()
 			ImGui::ProgressBar(decimatePercentage);
 			if (ImGui::Button("Model decimation"))
 			{
-				MeshDecimator::setInputModel(&currentModel);
-				currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
+				MeshDecimator::decimate(decimatePercentage);
 			}
 
 		}
@@ -460,7 +461,7 @@ void renderStuff(Shader lampShader, Shader importShader)
 	importShader.setMat4("model", model3);
 
 
-	currentModel.Draw(importShader);
+	outputModel.Draw(importShader);
 }
 
 // ------------------------------------------------------------------
@@ -487,6 +488,7 @@ int main()
 
 	//program opens in cmd mode, here we set the default path
 	currentModel = Model(FileSystem::getPath(cmdFile));
+	MeshDecimator::setInputModel(&currentModel, &outputModel);
 	//currentModel.setPath(cmdFile);
 
 	//output in console Opengl version
