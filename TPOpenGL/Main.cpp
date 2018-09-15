@@ -68,12 +68,14 @@ bool isInWireframe = false;
 bool isOpeningFile = false;
 
 //bool show_demo_window = true;
-bool show_settings_window = true;
 static bool show_app_metrics = false;
 static bool show_app_style_editor = false;
+static bool show_settings_window = true;
+static bool show_modelSettings_window = false;
+static bool show_lightSettings_window = false;
+static bool show_decimateSettings_window = true;
+static bool show_help_window = true;
 static bool show_app_about = false;
-bool show_modelSettings_window = false;
-bool show_lightSettings_window = false;
 
 ImVec4 clear_color = ImVec4(0.24f, 0.4f, 0.9f, 1.0f);
 // timing
@@ -217,19 +219,19 @@ void startMyGui()
 	//all gui windows
 	if (show_settings_window)
 	{
-		ImGui::Begin("Settings", &show_settings_window);
+		ImGui::Begin("Global Settings", &show_settings_window);
 		{
 
 
-			ImGui::Text("Settings");                           // Display some text (you can use a format string too)
+			ImGui::Text("Change Background Color");                           // Display some text (you can use a format string too)
 
 			ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
-
-
+			ImGui::Checkbox("Show Mesh Decimation Settings Window", &show_decimateSettings_window);
 			ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
 			ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
 			ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
 			ImGui::Checkbox("is OpeningFile bool", &isOpeningFile);
+			ImGui::Checkbox("Show Help Window", &show_help_window);
 			ImGui::Checkbox("Wireframe", &isInWireframe);
 			if (isInWireframe)
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -274,18 +276,19 @@ void startMyGui()
 				importModelPos = modelZeroPos;
 				//model = glm::translate(model3, importModelPos);
 			}
+		}
+		ImGui::End();
+	}
 
-			if (ImGui::Button("Model decimation"))
-			{
-				MeshDecimator::setInputModel(&currentModel);
-				currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
-			}
-
+	if (show_decimateSettings_window)
+	{
+		ImGui::Begin("Decimate Settings", &show_decimateSettings_window);
+		{
 			//only the first of the buttons works, no matter which you set
 			//ImGuiDir downButton = ImGuiDir(3);  3 is down in the enum
 			if (ImGui::ArrowButton("Decimate Model:", 3))
 			{
-				if(decimatePercentage > 0.0f)
+				if (decimatePercentage > 0.0f)
 					decimatePercentage -= 0.01f;
 			}
 
@@ -293,19 +296,25 @@ void startMyGui()
 			if (ImGui::ArrowButton("Decimate Model:", 2))
 			{
 				//if(decimatePercentage < 1.0f)
-					decimatePercentage += 0.01f;
+				decimatePercentage += 0.01f;
 			}
-			
-			if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f)) 
+
+			if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f))
 			{
 				//MeshDecimator::setInputModel(&currentModel);
 				//currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
 			}
 			ImGui::ProgressBar(decimatePercentage);
-			
+			if (ImGui::Button("Model decimation"))
+			{
+				MeshDecimator::setInputModel(&currentModel);
+				currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
+			}
+
 		}
 		ImGui::End();
 	}
+
 
 	if (show_lightSettings_window)
 	{
@@ -337,11 +346,25 @@ void startMyGui()
 		ImGui::End();
 	}
 
+	if (show_help_window)
+	{
+		ImGui::Begin("Help window", &show_help_window, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("Commands: ", ImGui::GetVersion());
+		ImGui::Separator();
+		ImGui::Text("Use WASD to move the camera angle around as in first person");
+		ImGui::Text("Press TAB to exit Camera Mode");
+		ImGui::Text("Press C to enter camera Mode, mouse controls camera");
+		ImGui::Text("Press 0 to enter Wireframe Mode and F to exit");
+		ImGui::Text("beware to not have camera Lock on and camera mode simultaneously on");
+		ImGui::End();
+	}
+
+
 	ImGui::BeginMainMenuBar();
 	{
-		if (ImGui::BeginMenu("Menu"))
+		if (ImGui::BeginMenu("File.."))
 		{
-			if (ImGui::Button("Open Files")) {
+			if (ImGui::Button("Open new Object")) {
 
 				isOpeningFile = true;
 
@@ -353,17 +376,30 @@ void startMyGui()
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Help"))
+		if (ImGui::BeginMenu("Settings"))
 		{
 			ImGui::Checkbox("Camera Mode", &cameraMode);
-			ImGui::MenuItem("Settings", NULL, &show_settings_window);
+			ImGui::MenuItem("Mesh Decimator", NULL, &show_decimateSettings_window);
+			ImGui::MenuItem("Global Settings", NULL, &show_settings_window);
 			ImGui::MenuItem("Model Settings", NULL, &show_modelSettings_window);
-			ImGui::Checkbox("Light Settings", &show_lightSettings_window);
+			ImGui::MenuItem("Light Settings",NULL, &show_lightSettings_window);
 			ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
 			ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
 			ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
 			ImGui::EndMenu();
 		}
+		if (ImGui::BeginMenu("Decimate Mesh"))
+		{
+			ImGui::MenuItem("Mesh Decimator", NULL, &show_decimateSettings_window);
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("help"))
+		{
+			ImGui::MenuItem("Help", NULL, &show_help_window);
+			ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMainMenuBar();
 
 	}
