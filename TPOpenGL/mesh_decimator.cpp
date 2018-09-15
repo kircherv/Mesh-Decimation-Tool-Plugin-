@@ -4,6 +4,7 @@
 Model* MeshDecimator::_inputModel;
 Model* MeshDecimator::_outputModel;
 std::vector<List<Vector>> MeshDecimator::_vertices;
+std::vector<List<Vector>> MeshDecimator::_normals;
 std::vector<List<tridata>> MeshDecimator::_triangles;
 std::vector<List<int>> MeshDecimator::_collapse_map;
 std::vector<List<int>> MeshDecimator::_permutation;
@@ -13,36 +14,47 @@ void MeshDecimator::setInputModel(Model* inputModel, Model* outputModel)
 	_inputModel = inputModel;
 	_outputModel = outputModel;
 
-	auto numMeshes = _inputModel->meshes.size();
-	_vertices = std::vector<List<Vector>>(numMeshes);
-	_triangles = std::vector<List<tridata>>(numMeshes);
-	_collapse_map = std::vector<List<int>>(numMeshes);
-	_permutation = std::vector<List<int>>(numMeshes);
+	_vertices = std::vector<List<Vector>>(1);
+	_normals = std::vector<List<Vector>>(1);
+	_triangles = std::vector<List<tridata>>(1);
+	_collapse_map = std::vector<List<int>>(1);
+	_permutation = std::vector<List<int>>(1);
+
+	List<Vector>& vertices = _vertices[0];
+	List<Vector>& normals = _normals[0];
+	List<tridata>& triangles = _triangles[0];
+
+	std::vector<Vector> allVertices;
 	
-	for (auto m = 0; m < numMeshes; m++)
+	auto vertexOffset = 0;
+	for (auto m = 0; m < _inputModel->meshes.size(); m++)
 	{
 		const auto& mesh = _inputModel->meshes[m];
-		List<Vector>& vertices = _vertices[m];
-		List<tridata>& triangles = _triangles[m];
 
 		for (const auto& vertex : mesh.vertices)
 		{
 			vertices.Add(Vector(vertex.Position.x, vertex.Position.y, vertex.Position.z));
+			normals.Add(Vector(vertex.Normal.x, vertex.Normal.y, vertex.Normal.z));
+			allVertices.push_back(Vector(vertex.Position.x, vertex.Position.y, vertex.Position.z));
 		}
 		unsigned int numTriangles = mesh.indices.size() / 3;
 		for (auto i = 0; i < numTriangles; i++)
 		{
 			tridata t;
-			t.v[0] = mesh.indices[i * 3];
-			t.v[1] = mesh.indices[i * 3 + 1];
-			t.v[2] = mesh.indices[i * 3 + 2];
+			t.v[0] = vertexOffset + mesh.indices[i * 3];
+			t.v[1] = vertexOffset + mesh.indices[i * 3 + 1];
+			t.v[2] = vertexOffset + mesh.indices[i * 3 + 2];
 
 			triangles.Add(t);
 		}
 
-		ProgressiveMesh(vertices, triangles, _collapse_map[m], _permutation[m]);
-		PermuteVertices(_permutation[m], vertices, triangles);
+		vertexOffset += mesh.vertices.size();
 	}
+
+	std::sort(allVertices.begin(), allVertices.end());
+
+	ProgressiveMesh(vertices, triangles, _collapse_map[0], _permutation[0]);
+	PermuteVertices(_permutation[0], vertices, triangles);
 
 	decimate(1.0);
 }
@@ -51,18 +63,18 @@ void MeshDecimator::decimate(double decimatePercentage)
 {
 	_outputModel->meshes.clear();
 
-	auto numMeshes = _inputModel->meshes.size();
+	auto numMeshes = 1;
 	for (auto m = 0; m < numMeshes; m++)
 	{
-		const auto& mesh = _inputModel->meshes[m];
 		List<Vector>& vertices = _vertices[m];
+		List<Vector>& normals = _normals[m];
 		List<tridata>& triangles = _triangles[m];
 		List<int>& collapse_map = _collapse_map[m];
 
 		std::vector<Vertex> meshVertices;
 		std::vector<unsigned int> meshIndices;
 
-		int render_num = int(decimatePercentage * mesh.vertices.size());
+		int render_num = int(decimatePercentage * vertices.num);
 		for (auto i = 0; i < triangles.num; i++)
 		{
 			int p0 = Map(collapse_map, triangles[i].v[0], render_num);
@@ -81,12 +93,14 @@ void MeshDecimator::decimate(double decimatePercentage)
 		for (auto i = 0; i < vertices.num; i++)
 		{
 			auto& vector = vertices[i];
+			auto& normal = normals[i];
 			Vertex v;
 			v.Position = glm::vec3(vector.x, vector.y, vector.z);
+			v.Normal = glm::vec3(normal.x, normal.y, normal.z);
 			meshVertices.push_back(v);
 		}
 
-		_outputModel->meshes.emplace_back(meshVertices, meshIndices, mesh.textures);
+		_outputModel->meshes.emplace_back(meshVertices, meshIndices, _inputModel->meshes[m].textures);
 	}
 }
 

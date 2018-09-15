@@ -20,6 +20,7 @@ private:
 	static int Map(List<int>& collapse_map, int a, int mx);
 
 	static std::vector<List<Vector>> _vertices;
+	static std::vector<List<Vector>> _normals;
 	static std::vector<List<tridata>> _triangles;
 	static std::vector<List<int>> _collapse_map;
 	static std::vector<List<int>> _permutation;

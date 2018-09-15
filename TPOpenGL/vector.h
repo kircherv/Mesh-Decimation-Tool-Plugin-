@@ -16,6 +16,16 @@ class Vector {
 	float x,y,z;
 	Vector(float _x=0.0,float _y=0.0,float _z=0.0){x=_x;y=_y;z=_z;};
 	operator float *() { return &x;};
+
+	bool operator < (const Vector& v2) const
+	{
+		if (fabsf(x - v2.x) > 0.001f)
+			return x < v2.x;
+		if (fabsf(y - v2.y) > 0.001f)
+			return y < v2.y;
+
+		return z < v2.z;
+	}
 };
 
 float magnitude(Vector v);
