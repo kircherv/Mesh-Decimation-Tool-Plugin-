@@ -66,6 +66,7 @@ bool lockOn = false;
 bool fileOpened = false;
 bool isInWireframe = false;
 bool isOpeningFile = false;
+bool isSavingFile = false;
 
 //bool show_demo_window = true;
 static bool show_app_metrics = false;
@@ -98,6 +99,7 @@ GLFWwindow* window;
 
 //Mesh Decimation
 float decimatePercentage = 0.75f;
+float specularStrength = 0.5f;
 
 // ------------------------------------------------------------------
 //								METHODS
@@ -218,6 +220,24 @@ void startMyGui()
 		}
 	}
 
+	if (isSavingFile)
+	{
+		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", ""))
+		{
+			if (ImGuiFileDialog::Instance()->IsOk == true)
+			{
+				ProgramSettings::exportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
+
+				std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << endl;
+
+				outputModel = Model(ProgramSettings::exportedModelPath);
+				//MeshDecimator::setInputModel(&currentModel, &outputModel);
+			}
+
+			isSavingFile = false;
+		}
+	}
+
 	//all gui windows
 	if (show_settings_window)
 	{
@@ -271,13 +291,12 @@ void startMyGui()
 			ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
 			ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
-			ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
-
 			if (ImGui::Button("Reset Position"))
-			{
 				importModelPos = modelZeroPos;
-				//model = glm::translate(model3, importModelPos);
-			}
+			ImGui::Text("Change Object Color");
+			ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
+			ImGui::Text("Change Object lighting Properties");
+			ImGui::SliderFloat("SpecularStrength", &specularStrength, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		}
 		ImGui::End();
 	}
@@ -372,7 +391,12 @@ void startMyGui()
 				if (ProgramSettings::ImportedModelPath.length() > 0)
 					ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
 			}
-			ImGui::MenuItem("Save As..");
+			if (ImGui::MenuItem("Save As..")) 
+			{
+				isSavingFile = true;
+				if (ProgramSettings::exportedModelPath.length() > 0)
+					ImGui::Text("Chosen model file : %s", ProgramSettings::exportedModelPath.c_str());
+			}
 			ImGui::MenuItem("Exit");
 			ImGui::EndMenu();
 		}
@@ -459,6 +483,7 @@ void renderStuff(Shader lampShader, Shader importShader)
 	model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
 	model3 = glm::scale(model3, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
 	importShader.setMat4("model", model3);
+	importShader.setFloat("specularStrength", specularStrength);
 
 
 	outputModel.Draw(importShader);

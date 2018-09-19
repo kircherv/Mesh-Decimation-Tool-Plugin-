@@ -6,5 +6,6 @@ class ProgramSettings
 {
 public:
 	static std::string ImportedModelPath;
+	static std::string exportedModelPath;
 };
 
