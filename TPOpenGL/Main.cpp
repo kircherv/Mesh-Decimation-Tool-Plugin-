@@ -160,13 +160,15 @@ int createGLFWWindow()
 std::string getLoadedFile()
 {
 	int cmdFileSelect;
-	std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl << "write 4 for tiger " << std::endl;
-	std::cout << "Waiting for input..." << std::endl;
-	//std::cin >> move;
-	std::cin >> cmdFileSelect;
+
 
 	while (true)
 	{
+		std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl << "write 4 for tiger " << std::endl;
+		std::cout << "Waiting for input..." << std::endl;
+		//std::cin >> move;
+		std::cin >> cmdFileSelect;
+
 		switch (cmdFileSelect)
 		{
 		case 1:

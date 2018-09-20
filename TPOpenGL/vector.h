@@ -26,6 +26,17 @@ class Vector {
 
 		return z < v2.z;
 	}
+
+	bool operator == (const Vector& v2)
+	{
+		const float epsilon = 1e-9f;
+		return fabsf(x - v2.x) < epsilon && fabsf(y - v2.y) < epsilon && fabsf(z - v2.z) < epsilon;
+	}
+
+	bool operator != (const Vector& v2)
+	{
+		return !(*this == v2);
+	}
 };
 
 float magnitude(Vector v);

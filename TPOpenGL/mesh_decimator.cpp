@@ -1,5 +1,5 @@
 #include "mesh_decimator.h"
-
+#include <set>
 
 Model* MeshDecimator::_inputModel;
 Model* MeshDecimator::_outputModel;
@@ -24,34 +24,69 @@ void MeshDecimator::setInputModel(Model* inputModel, Model* outputModel)
 	List<Vector>& normals = _normals[0];
 	List<tridata>& triangles = _triangles[0];
 
-	std::vector<Vector> allVertices;
+	std::vector<std::pair<Vector, int>> allVertices;
 	
-	auto vertexOffset = 0;
+	//auto vertexOffset = 0;
 	for (auto m = 0; m < _inputModel->meshes.size(); m++)
 	{
 		const auto& mesh = _inputModel->meshes[m];
 
-		for (const auto& vertex : mesh.vertices)
+		for (auto i = 0; i < mesh.vertices.size(); i++)
 		{
-			vertices.Add(Vector(vertex.Position.x, vertex.Position.y, vertex.Position.z));
-			normals.Add(Vector(vertex.Normal.x, vertex.Normal.y, vertex.Normal.z));
-			allVertices.push_back(Vector(vertex.Position.x, vertex.Position.y, vertex.Position.z));
+			const auto& vertex = mesh.vertices[i];
+			//vertices.Add(Vector(vertex.Position.x, vertex.Position.y, vertex.Position.z));
+			//normals.Add(Vector(vertex.Normal.x, vertex.Normal.y, vertex.Normal.z));
+			allVertices.push_back(std::make_pair(Vector(vertex.Position.x, vertex.Position.y, vertex.Position.z), i));
 		}
+	}
+
+	std::sort(allVertices.begin(), allVertices.end());
+	std::map<int, int> remap;
+	auto currentVector = Vector(-9999999, -9999999, -9999999);
+	auto remapIndex = -1;
+	
+	for (auto i = 0; i < allVertices.size(); i++)
+	{
+		if (allVertices[i].first != currentVector)
+		{
+			currentVector = allVertices[i].first;
+			remapIndex = vertices.num;
+			vertices.Add(currentVector);
+		}
+
+		remap[allVertices[i].second] = remapIndex;
+	}
+
+	for (auto m = 0; m < _inputModel->meshes.size(); m++)
+	{
+		const auto& mesh = _inputModel->meshes[m];
 		unsigned int numTriangles = mesh.indices.size() / 3;
 		for (auto i = 0; i < numTriangles; i++)
 		{
 			tridata t;
-			t.v[0] = vertexOffset + mesh.indices[i * 3];
-			t.v[1] = vertexOffset + mesh.indices[i * 3 + 1];
-			t.v[2] = vertexOffset + mesh.indices[i * 3 + 2];
+
+			int p0 = remap[mesh.indices[i * 3]];
+			int p1 = remap[mesh.indices[i * 3 + 1]];
+			int p2 = remap[mesh.indices[i * 3 + 2]];
+
+			if (p0 == p1 || p1 == p2 || p0 == p2)
+				continue;
+
+			t.v[0] = p0;
+			t.v[1] = p1;
+			t.v[2] = p2;
 
 			triangles.Add(t);
 		}
 
-		vertexOffset += mesh.vertices.size();
+		//vertexOffset += mesh.vertices.size();
 	}
 
-	std::sort(allVertices.begin(), allVertices.end());
+	std::set<int> differentMappings;
+	for (const auto& kvPair : remap)
+	{
+		differentMappings.insert(kvPair.second);
+	}
 
 	ProgressiveMesh(vertices, triangles, _collapse_map[0], _permutation[0]);
 	PermuteVertices(_permutation[0], vertices, triangles);
@@ -75,6 +110,7 @@ void MeshDecimator::decimate(double decimatePercentage)
 		std::vector<unsigned int> meshIndices;
 
 		int render_num = int(decimatePercentage * vertices.num);
+		std::vector<glm::vec3> calculatedNormals;
 		for (auto i = 0; i < triangles.num; i++)
 		{
 			int p0 = Map(collapse_map, triangles[i].v[0], render_num);
@@ -88,15 +124,21 @@ void MeshDecimator::decimate(double decimatePercentage)
 			meshIndices.push_back(p0);
 			meshIndices.push_back(p1);
 			meshIndices.push_back(p2);
+
+			glm::vec3 v0 = glm::vec3(vertices[p0].x, vertices[p0].y, vertices[p0].z);
+			glm::vec3 v1 = glm::vec3(vertices[p1].x, vertices[p1].y, vertices[p1].z);
+			glm::vec3 v2 = glm::vec3(vertices[p2].x, vertices[p2].y, vertices[p2].z);
+
+			calculatedNormals.push_back(glm::normalize(glm::cross(v1 - v0, v2 - v1)));
 		}
 
 		for (auto i = 0; i < vertices.num; i++)
 		{
 			auto& vector = vertices[i];
-			auto& normal = normals[i];
+			auto& normal = calculatedNormals[i % calculatedNormals.size()];
 			Vertex v;
 			v.Position = glm::vec3(vector.x, vector.y, vector.z);
-			v.Normal = glm::vec3(normal.x, normal.y, normal.z);
+			v.Normal = normal;
 			meshVertices.push_back(v);
 		}
 
