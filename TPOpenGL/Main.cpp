@@ -63,6 +63,8 @@ glm::mat4 projection;
 bool inUI = true;
 bool cameraMode = false;
 bool lockOn = false;
+bool isRotatingObject = false;
+bool isMovingLight = false;
 bool fileOpened = false;
 bool isInWireframe = false;
 bool isOpeningFile = false;
@@ -100,6 +102,7 @@ GLFWwindow* window;
 //Mesh Decimation
 float decimatePercentage = 0.75f;
 float specularStrength = 0.5f;
+float ambientStrength = 0.1f;
 
 // ------------------------------------------------------------------
 //								METHODS
@@ -312,7 +315,10 @@ void startMyGui()
 			ImGui::Text("Change Object Color");
 			ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 			ImGui::Text("Change Object lighting Properties");
-			ImGui::SliderFloat("SpecularStrength", &specularStrength, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);         
+			ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::Checkbox("Contineous Object Rotation", &isRotatingObject);
+			
 		}
 		ImGui::End();
 	}
@@ -361,11 +367,14 @@ void startMyGui()
 			ImGui::SliderFloat("Y-Axis", &lightPos.y, -5.0f, 5.0f);
 			ImGui::SliderFloat("Z-Axis", &lightPos.z, -5.0f, 5.0f);
 
+
 			if (ImGui::Button("Reset Position"))
 			{
 				lightPos = lightZeroPos;
 				//model = glm::translate(model, lightPos);
 			}
+
+			ImGui::Checkbox("Contineous Lamp Movement", &isMovingLight);
 		}
 		ImGui::End();
 	}
@@ -482,6 +491,12 @@ void renderStuff(Shader lampShader, Shader importShader)
 	lampShader.setMat4("projection", projection);
 	lampShader.setMat4("view", view);
 	glm::mat4 model;
+	if (isMovingLight)
+	{
+		lightPos.x = sin(glfwGetTime()) ;
+		lightPos.y = sin(glfwGetTime()) ;
+		lightPos.z = sin(glfwGetTime()) ;
+	}
 	model = glm::translate(model, lightPos);
 	model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 	lampShader.setMat4("model", model);
@@ -497,9 +512,14 @@ void renderStuff(Shader lampShader, Shader importShader)
 	importShader.setMat4("view", view);
 	glm::mat4 model3;
 	model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
-	model3 = glm::scale(model3, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+
+	if(isRotatingObject)
+		model3 = glm::rotate(model3, (float)glfwGetTime()*0.25f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	model3 = glm::scale(model3, glm::vec3(0.7f, 0.7f, 0.7f));	// it's a bit too big for our scene, so scale it down
 	importShader.setMat4("model", model3);
 	importShader.setFloat("specularStrength", specularStrength);
+	importShader.setFloat("ambientStrength", ambientStrength);
 
 
 	outputModel.Draw(importShader);
