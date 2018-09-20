@@ -229,9 +229,9 @@ void startMyGui()
 			if (ImGuiFileDialog::Instance()->IsOk == true)
 			{
 				ProgramSettings::exportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
-
+				
 				std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << endl;
-				outputModel.setPath(ProgramSettings::exportedModelPath);
+				outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
 				//outputModel = Model(ProgramSettings::exportedModelPath);
 				//MeshDecimator::setInputModel(&currentModel, &outputModel);
 			}

@@ -62,10 +62,64 @@ void Model::Draw(Shader shader)
 		meshes[i].Draw(shader);
 }
 
-void Model::setPath(string const &path)
+#include <fstream>
+void Model::exportModelAsObj(string const &path)
 {
 	m_path = path;
+	std::ofstream outFile(path);
+	Mesh& mesh = meshes[0];
+
+	for (const auto& vertex : mesh.vertices)
+	{
+		outFile << "v" << " " << vertex.Position.x << " " << vertex.Position.y << " " << vertex.Position.z << std::endl;
+		outFile << "vn" << " " << vertex.Normal.x << " " << vertex.Normal.y << " " << vertex.Normal.z << std::endl;
+	}
+
+	int numTriangles = mesh.indices.size() / 3;
+	for (int i = 0; i < numTriangles; i++)
+	{
+		outFile << "f";
+		for (int j = 0; j < 3; j++)
+		{
+			outFile << " " << mesh.indices[i * 3 + j] + 1 << "//" << mesh.indices[i * 3 + j] + 1;
+		}
+		outFile << std::endl;
+
+	}
+
+	outFile.close();
 }
+
+void Model::exportModelAsOff(string const &path)
+{
+	m_path = path;
+	std::ofstream outFile(path);
+	Mesh& mesh = meshes[0];
+
+	int numTriangles = mesh.indices.size() / 3;
+
+	outFile << mesh.vertices.size() << " " << numTriangles << " " << 0 << std::endl;
+	for (const auto& vertex : mesh.vertices)
+	{
+		outFile << vertex.Position.x << "  " << vertex.Position.y << "  " << vertex.Position.z << std::endl;
+	}
+	
+	for (int i = 0; i < numTriangles; i++)
+	{
+		outFile << "3  ";
+		for (int j = 0; j < 3; j++)
+		{
+			if (j > 0)
+				outFile << " ";
+			outFile << mesh.indices[i * 3 + j];
+		}
+		outFile << std::endl;
+
+	}
+
+	outFile.close();
+}
+
 
 string const Model::getPath()
 {

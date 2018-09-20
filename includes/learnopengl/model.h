@@ -42,7 +42,8 @@ public:
 	// draws the model, and thus all its meshes
 	void Draw(Shader shader);
 
-	void setPath(string const &path);
+	void exportModelAsOff(string const &path);
+	void exportModelAsObj(string const &path);
 
 
 	string const getPath();

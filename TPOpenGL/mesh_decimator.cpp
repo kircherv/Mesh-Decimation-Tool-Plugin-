@@ -111,6 +111,10 @@ void MeshDecimator::decimate(double decimatePercentage)
 
 		int render_num = int(decimatePercentage * vertices.num);
 		std::vector<glm::vec3> calculatedNormals;
+
+		std::map<int, std::vector<int>> verticesToTriangles;
+
+		int triangleIndex = 0;
 		for (auto i = 0; i < triangles.num; i++)
 		{
 			int p0 = Map(collapse_map, triangles[i].v[0], render_num);
@@ -125,24 +129,35 @@ void MeshDecimator::decimate(double decimatePercentage)
 			meshIndices.push_back(p1);
 			meshIndices.push_back(p2);
 
+			verticesToTriangles[p0].push_back(triangleIndex);
+			verticesToTriangles[p1].push_back(triangleIndex);
+			verticesToTriangles[p2].push_back(triangleIndex);
+
 			glm::vec3 v0 = glm::vec3(vertices[p0].x, vertices[p0].y, vertices[p0].z);
 			glm::vec3 v1 = glm::vec3(vertices[p1].x, vertices[p1].y, vertices[p1].z);
 			glm::vec3 v2 = glm::vec3(vertices[p2].x, vertices[p2].y, vertices[p2].z);
 
 			calculatedNormals.push_back(glm::normalize(glm::cross(v1 - v0, v2 - v1)));
+			triangleIndex++;
 		}
 
 		for (auto i = 0; i < vertices.num; i++)
 		{
 			auto& vector = vertices[i];
-			auto& normal = calculatedNormals[i % calculatedNormals.size()];
+			glm::vec3 vFinalNormal(0, 0, 0);
+			for (int triangleIndex : verticesToTriangles[i])
+			{
+				vFinalNormal += calculatedNormals[triangleIndex];
+			}
+			vFinalNormal = glm::normalize(vFinalNormal);
 			Vertex v;
 			v.Position = glm::vec3(vector.x, vector.y, vector.z);
-			v.Normal = normal;
+			v.Normal = _isnan(vFinalNormal.x) ? glm::vec3(0, 0, 0) : vFinalNormal;
 			meshVertices.push_back(v);
 		}
 
-		_outputModel->meshes.emplace_back(meshVertices, meshIndices, _inputModel->meshes[m].textures);
+		//_outputModel->meshes.emplace_back(meshVertices, meshIndices, _inputModel->meshes[m].textures);
+		_outputModel->meshes.emplace_back(meshVertices, meshIndices, std::vector<Texture>());
 	}
 }
 
