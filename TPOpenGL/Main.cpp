@@ -212,7 +212,9 @@ void startMyGui()
 			{
 				ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
 
-				std::cout << "openButton ok and model " << ProgramSettings::ImportedModelPath << " has been imported!" << endl;
+				std::string extension = ProgramSettings::ImportedModelPath;
+				std::string ext = extension.substr(extension.length() - 4);
+				std::cout << "model" << ProgramSettings::ImportedModelPath << " has been imported!" << "extension: " << ext << endl;
 
 				currentModel = Model(ProgramSettings::ImportedModelPath);
 				MeshDecimator::setInputModel(&currentModel, &outputModel);
@@ -230,10 +232,22 @@ void startMyGui()
 			{
 				ProgramSettings::exportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
 				
-				std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << endl;
-				outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
-				//outputModel = Model(ProgramSettings::exportedModelPath);
-				//MeshDecimator::setInputModel(&currentModel, &outputModel);
+				std::string extension = ProgramSettings::exportedModelPath;
+				std::string ext = extension.substr(extension.length() - 4);
+				std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << extension << "ext: " << ext<< endl;
+				if (ext == ".obj")
+				{
+					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << extension << "ext: " << ext << endl;
+					outputModel.exportModelAsObj(ProgramSettings::exportedModelPath);
+				}
+				else if (ext == ".off") 
+				{
+					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << extension << "ext: " << ext << endl;
+					outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
+				}
+				else
+					std::cout << "ext: " << ext << "is not allowed"<< endl;
+				
 			}
 
 			isSavingFile = false;
