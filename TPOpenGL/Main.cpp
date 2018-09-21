@@ -314,12 +314,12 @@ void startMyGui()
 				importModelPos = modelZeroPos;
 			ImGui::Text("Change Object Size");
 			ImGui::SliderFloat("Model Size", &modelSizef, 0.01f, 10.0f);
-			ImGui::Text("Change Object Color");
-			ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
+			//ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 			ImGui::Text("Change Object lighting Properties");
 			ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);         
 			ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::Checkbox("Contineous Object Rotation", &isRotatingObject);
+			ImGui::Text("Change Object Color");
 			ImGui::ColorPicker3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 			
 		}
@@ -553,6 +553,8 @@ int main()
 
 	//program opens in cmd mode, here we set the default path
 	currentModel = Model(FileSystem::getPath(cmdFile));
+	//how do i make cmdFile a relative path
+	//currentModel = Model(cmdFile);
 	MeshDecimator::setInputModel(&currentModel, &outputModel);
 	//currentModel.setPath(cmdFile);
 
