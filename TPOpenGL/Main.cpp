@@ -88,7 +88,7 @@ float lastFrame = 0.0f;
 //model
 Model currentModel;
 Model outputModel;
-
+float modelSizef = 0.2f;
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
@@ -312,12 +312,15 @@ void startMyGui()
 			ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
 			if (ImGui::Button("Reset Position"))
 				importModelPos = modelZeroPos;
+			ImGui::Text("Change Object Size");
+			ImGui::SliderFloat("Model Size", &modelSizef, 0.01f, 10.0f);
 			ImGui::Text("Change Object Color");
 			ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 			ImGui::Text("Change Object lighting Properties");
 			ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);         
 			ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::Checkbox("Contineous Object Rotation", &isRotatingObject);
+			ImGui::ColorPicker3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 			
 		}
 		ImGui::End();
@@ -333,17 +336,19 @@ void startMyGui()
 			{
 				if (decimatePercentage > 0.0f)
 					decimatePercentage -= 0.01f;
+				MeshDecimator::decimate(decimatePercentage);
 			}
 
 			//ImGuiDir upButton = ImGuiDir(2);  2 is up in the enum
 			if (ImGui::ArrowButton("Decimate Model:", 2))
 			{
-				//if(decimatePercentage < 1.0f)
+				MeshDecimator::decimate(decimatePercentage);
 				decimatePercentage += 0.01f;
 			}
 
 			if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f))
 			{
+				MeshDecimator::decimate(decimatePercentage);
 				//MeshDecimator::setInputModel(&currentModel);
 				//currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
 			}
@@ -515,8 +520,7 @@ void renderStuff(Shader lampShader, Shader importShader)
 
 	if(isRotatingObject)
 		model3 = glm::rotate(model3, (float)glfwGetTime()*0.25f, glm::vec3(0.0f, 1.0f, 0.0f));
-
-	model3 = glm::scale(model3, glm::vec3(0.7f, 0.7f, 0.7f));	// it's a bit too big for our scene, so scale it down
+	model3 = glm::scale(model3, glm::vec3(modelSizef));	// it's a bit too big for our scene, so scale it down
 	importShader.setMat4("model", model3);
 	importShader.setFloat("specularStrength", specularStrength);
 	importShader.setFloat("ambientStrength", ambientStrength);
