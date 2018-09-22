@@ -178,22 +178,22 @@ std::string getLoadedFile()
 		case 1:
 		{
 			std::cout << "Selected 1: planet" << std::endl;
-			return "resources/objects/noTexture/planet.obj";
+			return "3D Objects/planet.obj";
 		}
 		case 2:
 		{
 			std::cout << "Selected 2: Nanosuit" << std::endl;
-			return  "resources/objects/noTexture/nanosuit.obj";
+			return  "3D Objects/nanosuit.obj";
 		}
 		case 3:
 		{
 			std::cout << "Selected: 3: rock" << std::endl;
-			return "resources/objects/noTexture/rock.obj";
+			return "3D Objects/rock.obj";
 		}
 		case 4:
 		{
 			std::cout << "Selected: 4: tiger.off" << std::endl;
-			return "resources/objects/noTexture/tiger.off";
+			return "3D Objects/tiger.off";
 		}
 		default:
 		{
