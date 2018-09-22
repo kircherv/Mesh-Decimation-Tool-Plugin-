@@ -321,7 +321,7 @@ void startMyGui()
 					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 				}
 				ImGui::Checkbox("Show About Window", &show_app_about);
-				ImGui::Checkbox("lock on camera", &lockOn);
+				ImGui::Checkbox("Camera: Turn on lock on Model", &lockOn);
 				if (lockOn)
 				{
 					view = camera.lockOnModel(importModelPos);
@@ -347,10 +347,10 @@ void startMyGui()
 				ImGui::Text("Change Object Size");
 				ImGui::SliderFloat("Model Size", &modelSizef, 0.01f, 10.0f);
 				//ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
-				ImGui::Text("Change Object lighting Properties");
+				ImGui::Text("Change Object Lighting Properties");
 				ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);
 				ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::Checkbox("Contineous Object Rotation", &isRotatingObject);
+				ImGui::Checkbox("Contineuos Object Rotation", &isRotatingObject);
 				ImGui::Text("Change Object Color");
 				ImGui::ColorPicker3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 
@@ -411,7 +411,7 @@ void startMyGui()
 					//model = glm::translate(model, lightPos);
 				}
 
-				ImGui::Checkbox("Contineous Lamp Movement", &isMovingLight);
+				ImGui::Checkbox("Continous Lamp Movement", &isMovingLight);
 			}
 			ImGui::End();
 		}
@@ -437,7 +437,7 @@ void startMyGui()
 			ImGui::Text("Press TAB to exit Camera Mode");
 			ImGui::Text("Press C to enter camera Mode, mouse controls camera");
 			ImGui::Text("Press 0 to enter Wireframe Mode and F to exit");
-			ImGui::Text("beware to not have camera Lock on and camera mode simultaneously on");
+			ImGui::Text("Beware to not have camera Lock on and camera mode simultaneously on");
 			ImGui::End();
 		}
 
@@ -446,7 +446,7 @@ void startMyGui()
 		{
 			if (ImGui::BeginMenu("File.."))
 			{
-				if (ImGui::Button("Open new Object")) {
+				if (ImGui::Button("Open new Object(allFiles)")) {
 
 					isOpeningNewFile = true;
 
@@ -454,7 +454,7 @@ void startMyGui()
 						ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
 				}
 
-				if (ImGui::Button("Open Object")) {
+				if (ImGui::Button("Open Object(Select Format)")) {
 
 					isOpeningFile = true;
 
@@ -473,25 +473,25 @@ void startMyGui()
 
 			if (ImGui::BeginMenu("Settings"))
 			{
-				ImGui::Checkbox("Camera Mode", &cameraMode);
-				ImGui::MenuItem("Mesh Decimator", NULL, &show_decimateSettings_window);
-				ImGui::MenuItem("Global Settings", NULL, &show_settings_window);
-				ImGui::MenuItem("Model Settings", NULL, &show_modelSettings_window);
-				ImGui::MenuItem("Light Settings", NULL, &show_lightSettings_window);
-				ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
-				ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
-				ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
+				ImGui::Checkbox("Go in Camera Mode", &cameraMode);
+				ImGui::MenuItem("Show Mesh Decimator", NULL, &show_decimateSettings_window);
+				ImGui::MenuItem("Show Global Settings", NULL, &show_settings_window);
+				ImGui::MenuItem("Show Model Settings", NULL, &show_modelSettings_window);
+				ImGui::MenuItem("Show Light Settings", NULL, &show_lightSettings_window);
+				ImGui::MenuItem("Show Metrics", NULL, &show_app_metrics);
+				ImGui::MenuItem("Show Style Editor", NULL, &show_app_style_editor);
+				ImGui::MenuItem("Show About Mesh Decimator", NULL, &show_app_about);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Decimate Mesh"))
 			{
-				ImGui::MenuItem("Mesh Decimator", NULL, &show_decimateSettings_window);
+				ImGui::MenuItem("Mesh Decimator Tool", NULL, &show_decimateSettings_window);
 				ImGui::EndMenu();
 			}
-			if (ImGui::BeginMenu("help"))
+			if (ImGui::BeginMenu("Help"))
 			{
-				ImGui::MenuItem("Help", NULL, &show_help_window);
-				ImGui::MenuItem("About Mesh Decimator", NULL, &show_app_about);
+				ImGui::MenuItem("Show Help", NULL, &show_help_window);
+				ImGui::MenuItem("Show About Mesh Decimator", NULL, &show_app_about);
 				ImGui::EndMenu();
 			}
 
