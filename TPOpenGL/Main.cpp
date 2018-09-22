@@ -321,7 +321,7 @@ void startMyGui()
 					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 				}
 				ImGui::Checkbox("Show About Window", &show_app_about);
-				ImGui::Checkbox("Camera: Turn on lock on Model", &lockOn);
+				ImGui::Checkbox("Camera: lock on Model", &lockOn);
 				if (lockOn)
 				{
 					view = camera.lockOnModel(importModelPos);
@@ -362,6 +362,8 @@ void startMyGui()
 		{
 			ImGui::Begin("Decimate Settings", &show_decimateSettings_window);
 			{
+
+				ImGui::Text("For Mesh Decimation: Use the Slider or Up and Down Arrows ");
 				//only the first of the buttons works, no matter which you set
 				//ImGuiDir downButton = ImGuiDir(3);  3 is down in the enum
 				if (ImGui::ArrowButton("Decimate Model:", 3))
@@ -371,12 +373,6 @@ void startMyGui()
 					MeshDecimator::decimate(decimatePercentage);
 				}
 
-				//ImGuiDir upButton = ImGuiDir(2);  2 is up in the enum
-				if (ImGui::ArrowButton("Decimate Model:", 2))
-				{
-					MeshDecimator::decimate(decimatePercentage);
-					decimatePercentage += 0.01f;
-				}
 
 				if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.01f, 1.0f))
 				{
@@ -384,11 +380,14 @@ void startMyGui()
 					//MeshDecimator::setInputModel(&currentModel);
 					//currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
 				}
-				ImGui::ProgressBar(decimatePercentage);
-				if (ImGui::Button("Model decimation"))
+				if (ImGui::ArrowButton("Decimate Model:", 2))
 				{
 					MeshDecimator::decimate(decimatePercentage);
+					decimatePercentage = decimatePercentage + 0.01f;
 				}
+				ImGui::ProgressBar(decimatePercentage);
+				//ImGuiDir upButton = ImGuiDir(2);  2 is up in the enum
+				
 
 			}
 			ImGui::End();
