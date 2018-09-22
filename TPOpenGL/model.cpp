@@ -253,6 +253,33 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	return Mesh(vertices, indices, textures);
 }
 
+int Model::getNumVertices()
+{
+	int result = 0;
+
+	for (const auto& mesh : meshes)
+	{
+		result += mesh.vertices.size();
+	}
+
+	return result;
+}
+int Model::getNumIndices()
+{
+	int result = 0;
+
+	for (const auto& mesh : meshes)
+	{
+		result += mesh.indices.size();
+	}
+
+	return result;
+}
+
+int Model::getNumFaces()
+{
+	return getNumIndices() / 3;
+}
 
 vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
 {

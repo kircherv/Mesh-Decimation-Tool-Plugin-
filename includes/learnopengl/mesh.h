@@ -40,7 +40,7 @@ public:
     vector<Vertex> vertices;
     vector<unsigned int> indices;
     vector<Texture> textures;
-    unsigned int VAO;
+	unsigned int VAO = 0;
 
     /*  Functions  */
     // constructor
@@ -53,6 +53,11 @@ public:
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
         setupMesh();
     }
+
+	~Mesh()
+	{
+		releaseMesh();
+	}
 
     // render the mesh
     void Draw(Shader shader) 
@@ -92,9 +97,30 @@ public:
         glActiveTexture(GL_TEXTURE0);
     }
 
+	void releaseMesh()
+	{
+		if (VBO != 0)
+		{
+			glDeleteBuffers(1, &VBO);
+			VBO = 0;
+		}
+
+		if (EBO != 0)
+		{
+			glDeleteBuffers(1, &EBO);
+			EBO = 0;
+		}
+
+		if (VAO != 0)
+		{
+			glDeleteVertexArrays(1, &VAO);
+			VAO = 0;
+		}
+	}
+
 private:
     /*  Render data  */
-    unsigned int VBO, EBO;
+    unsigned int VBO = 0, EBO = 0;
 
     /*  Functions    */
     // initializes all the buffer objects/arrays

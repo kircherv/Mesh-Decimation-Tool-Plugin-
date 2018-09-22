@@ -209,7 +209,7 @@ void startMyGui()
 	//open new object
 	if (isOpeningFile)
 	{
-		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", ""))
+		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".*\0.obj\0.off\0\0", ".", ""))
 		{
 			if (ImGuiFileDialog::Instance()->IsOk == true)
 			{
@@ -229,7 +229,7 @@ void startMyGui()
 
 	if (isSavingFile)
 	{
-		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", ""))
+		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".*\0.obj\0.off\0\0", ".", ""))
 		{
 			if (ImGuiFileDialog::Instance()->IsOk == true)
 			{
@@ -237,19 +237,22 @@ void startMyGui()
 				
 				std::string extension = ProgramSettings::exportedModelPath;
 				std::string ext = extension.substr(extension.length() - 4);
-				std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << extension << "ext: " << ext<< endl;
+			//	std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: "  << ext<< endl;
 				if (ext == ".obj")
 				{
-					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << extension << "ext: " << ext << endl;
+					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: "  << ext << endl;
 					outputModel.exportModelAsObj(ProgramSettings::exportedModelPath);
 				}
 				else if (ext == ".off") 
 				{
-					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << extension << "ext: " << ext << endl;
+					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << ext << endl;
 					outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
 				}
-				else
+				else 
+				{
+					outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
 					std::cout << "ext: " << ext << "is not allowed"<< endl;
+				}
 				
 			}
 
@@ -305,6 +308,7 @@ void startMyGui()
 	{
 		ImGui::Begin("Model Settings", &show_modelSettings_window);
 		{
+			ImGui::Text("Object Information: Vertices: %d, Indices: %d, Faces: %d", outputModel.getNumVertices(), outputModel.getNumIndices(), outputModel.getNumFaces());
 
 			ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
 			ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
@@ -334,7 +338,7 @@ void startMyGui()
 			//ImGuiDir downButton = ImGuiDir(3);  3 is down in the enum
 			if (ImGui::ArrowButton("Decimate Model:", 3))
 			{
-				if (decimatePercentage > 0.0f)
+				if (decimatePercentage > 0.01f)
 					decimatePercentage -= 0.01f;
 				MeshDecimator::decimate(decimatePercentage);
 			}
@@ -346,7 +350,7 @@ void startMyGui()
 				decimatePercentage += 0.01f;
 			}
 
-			if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.0f, 1.0f))
+			if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.01f, 1.0f))
 			{
 				MeshDecimator::decimate(decimatePercentage);
 				//MeshDecimator::setInputModel(&currentModel);
@@ -552,13 +556,15 @@ int main()
 	StaticGeometry::load();
 
 	//program opens in cmd mode, here we set the default path
-	currentModel = Model(FileSystem::getPath(cmdFile));
+	//auto pathqqq = FileSystem::getPath(cmdFile);
+	currentModel = Model(cmdFile);
 	//how do i make cmdFile a relative path
 	//currentModel = Model(cmdFile);
 	MeshDecimator::setInputModel(&currentModel, &outputModel);
 	//currentModel.setPath(cmdFile);
 
-	//output in console Opengl version
+	//output in console Opengl versio
+
 	fprintf(stderr, "OpenGL version: %s\n", glGetString(GL_VERSION));
 
 	//Gui Setup
@@ -606,6 +612,7 @@ int main()
 	// ------------------------------------------------------------------
 	//		Cleanup: deallocate all resources once they've outlived their purpose
 	// ------------------------------------------------------------------
+
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();

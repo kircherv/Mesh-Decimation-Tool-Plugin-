@@ -39,6 +39,11 @@ public:
 
 	Model();
 
+	
+	int getNumVertices();
+	int getNumIndices();
+	int getNumFaces();
+
 	// draws the model, and thus all its meshes
 	void Draw(Shader shader);
 

@@ -96,6 +96,8 @@ void MeshDecimator::setInputModel(Model* inputModel, Model* outputModel)
 
 void MeshDecimator::decimate(double decimatePercentage)
 {
+	if (decimatePercentage < 0.01)
+		return;
 	_outputModel->meshes.clear();
 
 	auto numMeshes = 1;
