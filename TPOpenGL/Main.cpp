@@ -93,6 +93,7 @@ Model outputModel;
 float modelSizef = 0.2f;
 float modelRotation = 0.0f;
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
+glm::vec3 rotateAxis(0.0f, 1.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
 // lighting
@@ -346,6 +347,14 @@ void startMyGui()
 				ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
 				ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
 				ImGui::Text("Change Object Rotation");
+				if (ImGui::Button("Rotate X Axis"))
+					rotateAxis = glm::vec3(0.0f,1.0f,0.0f);
+				else if (ImGui::Button("Rotate Y Axis"))
+					rotateAxis = glm::vec3(1.0f, 0.0f, 0.0f);
+				else if (ImGui::Button("Rotate ZAxis"))
+					rotateAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+			
+
 				ImGui::SliderFloat("Rotate", &modelRotation, 0.0f, 6.5f);
 				if (ImGui::Button("Reset Position"))
 					importModelPos = modelZeroPos;
@@ -563,7 +572,7 @@ void startMyGui()
 
 		if (isContinousRotatingObject)
 			model3 = glm::rotate(model3, (float)glfwGetTime()*0.25f, glm::vec3(0.0f, 1.0f, 0.0f));
-		model3 = glm::rotate(model3, modelRotation, glm::vec3(0.0f, 1.0f, 0.0f));
+		model3 = glm::rotate(model3, modelRotation, rotateAxis);
 		model3 = glm::scale(model3, glm::vec3(modelSizef));	// it's a bit too big for our scene, so scale it down
 		importShader.setMat4("model", model3);
 		importShader.setFloat("specularStrength", specularStrength);
