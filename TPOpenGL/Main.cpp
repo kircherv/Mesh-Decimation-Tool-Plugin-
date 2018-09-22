@@ -64,6 +64,7 @@ bool inUI = true;
 bool cameraMode = false;
 bool lockOn = false;
 bool isRotatingObject = false;
+bool isContinousRotatingObject = false;
 bool isMovingLight = false;
 bool fileOpened = false;
 bool isInWireframe = false;
@@ -90,6 +91,7 @@ float lastFrame = 0.0f;
 Model currentModel;
 Model outputModel;
 float modelSizef = 0.2f;
+float modelRotation = 0.0f;
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
 glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
@@ -337,11 +339,14 @@ void startMyGui()
 			ImGui::Begin("Model Settings", &show_modelSettings_window);
 			{
 				ImGui::Text("Object Information: Vertices: %d, Indices: %d, Faces: %d", outputModel.getNumVertices(), outputModel.getNumIndices(), outputModel.getNumFaces());
-
+				ImGui::Text("Change Object Color");
+				ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 				ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
 				ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
 				ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
+				ImGui::Text("Change Object Rotation");
+				ImGui::SliderFloat("Rotate", &modelRotation, 0.0f, 6.5f);
 				if (ImGui::Button("Reset Position"))
 					importModelPos = modelZeroPos;
 				ImGui::Text("Change Object Size");
@@ -350,9 +355,8 @@ void startMyGui()
 				ImGui::Text("Change Object Lighting Properties");
 				ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);
 				ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::Checkbox("Contineuos Object Rotation", &isRotatingObject);
-				ImGui::Text("Change Object Color");
-				ImGui::ColorPicker3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
+				ImGui::Checkbox("Contineuos Object Rotation", &isContinousRotatingObject);
+				
 
 			}
 			ImGui::End();
@@ -374,7 +378,7 @@ void startMyGui()
 				}
 
 
-				if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.01f, 1.0f))
+				if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.001f, 1.0f))
 				{
 					MeshDecimator::decimate(decimatePercentage);
 					//MeshDecimator::setInputModel(&currentModel);
@@ -557,8 +561,9 @@ void startMyGui()
 		glm::mat4 model3;
 		model3 = glm::translate(model3, importModelPos); // translate it down so it's at the center of the scene
 
-		if (isRotatingObject)
+		if (isContinousRotatingObject)
 			model3 = glm::rotate(model3, (float)glfwGetTime()*0.25f, glm::vec3(0.0f, 1.0f, 0.0f));
+		model3 = glm::rotate(model3, modelRotation, glm::vec3(0.0f, 1.0f, 0.0f));
 		model3 = glm::scale(model3, glm::vec3(modelSizef));	// it's a bit too big for our scene, so scale it down
 		importShader.setMat4("model", model3);
 		importShader.setFloat("specularStrength", specularStrength);
