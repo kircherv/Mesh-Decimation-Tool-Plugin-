@@ -92,6 +92,7 @@ Model currentModel;
 Model outputModel;
 float modelSizef = 0.2f;
 float modelRotation = 0.0f;
+int rotationstate = 0;
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 rotateAxis(0.0f, 1.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
@@ -339,28 +340,30 @@ void startMyGui()
 		{
 			ImGui::Begin("Model Settings", &show_modelSettings_window);
 			{
-				ImGui::Text("Object Information: Vertices: %d, Indices: %d, Faces: %d", outputModel.getNumVertices(), outputModel.getNumIndices(), outputModel.getNumFaces());
+				ImGui::Text("Object Information:");
+				ImGui::Text("Vertices: %d, Indices: %d, Faces: %d", outputModel.getNumVertices(), outputModel.getNumIndices(), outputModel.getNumFaces());
 				ImGui::Text("Change Object Color");
 				ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
 				ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
 				ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 				ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
 				ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
-				ImGui::Text("Change Object Rotation");
-				if (ImGui::Button("Rotate X Axis"))
-					rotateAxis = glm::vec3(0.0f,1.0f,0.0f);
-				else if (ImGui::Button("Rotate Y Axis"))
-					rotateAxis = glm::vec3(1.0f, 0.0f, 0.0f);
-				else if (ImGui::Button("Rotate ZAxis"))
-					rotateAxis = glm::vec3(0.0f, 0.0f, 1.0f);
-			
-
-				ImGui::SliderFloat("Rotate", &modelRotation, 0.0f, 6.5f);
 				if (ImGui::Button("Reset Position"))
 					importModelPos = modelZeroPos;
+				ImGui::Text("Change Object Rotation");
+			
+				if (ImGui::RadioButton("Rotate X Axis", &rotationstate, 0))
+					rotateAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+				if (ImGui::RadioButton("Rotate Y Axis", &rotationstate, 1))
+					rotateAxis = glm::vec3(1.0f, 0.0f, 0.0f);
+				if (ImGui::RadioButton("Rotate Z Axis", &rotationstate, 2))
+					rotateAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+
+				
+				ImGui::SliderFloat("Rotate Object", &modelRotation, 0.0f, 6.5f);
 				ImGui::Text("Change Object Size");
 				ImGui::SliderFloat("Model Size", &modelSizef, 0.01f, 10.0f);
-				//ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
+				
 				ImGui::Text("Change Object Lighting Properties");
 				ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);
 				ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
