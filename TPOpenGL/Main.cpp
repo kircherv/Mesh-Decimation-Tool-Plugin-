@@ -93,6 +93,7 @@ Model outputModel;
 float modelSizef = 0.2f;
 float modelRotation = 0.0f;
 int rotationstate = 0;
+std::string modelName = " ";
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 rotateAxis(0.0f, 1.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
@@ -223,7 +224,7 @@ void startMyGui()
 			if (ImGuiFileDialog::Instance()->IsOk == true)
 			{
 				ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
-
+				modelName = ImGuiFileDialog::Instance()->GetCurrentFileName();
 				std::string extension = ProgramSettings::ImportedModelPath;
 				std::string ext = extension.substr(extension.length() - 4);
 				std::cout << "model" << ProgramSettings::ImportedModelPath << " has been imported!" << "extension: " << ext << endl;
@@ -246,7 +247,7 @@ void startMyGui()
 			if (ImGuiFileDialog::Instance()->IsOk == true)
 			{
 				ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
-
+				modelName = ImGuiFileDialog::Instance()->GetCurrentFileName();
 				std::string extension = ProgramSettings::ImportedModelPath;
 				std::string ext = extension.substr(extension.length() - 4);
 				std::cout << "model" << ProgramSettings::ImportedModelPath << " has been imported!" << "extension: " << ext << endl;
@@ -305,7 +306,7 @@ void startMyGui()
 			ImGui::Checkbox("Camera Mode", &cameraMode); ImGui::SameLine();
 			ImGui::Text(" | Press TAB to exit Camera Mode"); 
 			ImGui::Checkbox("Camera: lock on Model", &lockOn);
-			ImGui::Separator();
+			ImGui::NewLine();
 			ImGui::Checkbox("Show Mesh Decimation Settings Window", &show_decimateSettings_window);
 			ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
 			ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
@@ -343,6 +344,7 @@ void startMyGui()
 		ImGui::Begin("Model Settings", &show_modelSettings_window);
 		{
 			ImGui::Text("Object Information: Vertices: %d, Indices: %d, Faces: %d", outputModel.getNumVertices(), outputModel.getNumIndices(), outputModel.getNumFaces());
+			ImGui::Text("Imported Model Name: ", modelName);
 			ImGui::Separator();
 			ImGui::Text("Change Object Size");				
 			ImGui::SliderFloat("Model Size", &modelSizef, 0.01f, 10.0f);
