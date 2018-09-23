@@ -1,5 +1,5 @@
 #include <learnopengl\model.h>
-
+#include <fstream>
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -13,9 +13,10 @@ Model::Model(string const &path, bool gamma) : gammaCorrection(gamma)
 
 Model::Model()
 {
-	//loadModel(path);
+	//only for empty initialization
 }
 
+//we ignore textures to avoid issues but, works fine before decimation
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
 {
 	string filename = string(path);
@@ -62,7 +63,7 @@ void Model::Draw(Shader shader)
 		meshes[i].Draw(shader);
 }
 
-#include <fstream>
+//2  export model formats supported, no idea how to generalize
 void Model::exportModelAsObj(string const &path)
 {
 	m_path = path;
@@ -253,6 +254,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	return Mesh(vertices, indices, textures);
 }
 
+//simple getters for gui output
 int Model::getNumVertices()
 {
 	int result = 0;

@@ -9,6 +9,7 @@ std::vector<List<tridata>> MeshDecimator::_triangles;
 std::vector<List<int>> MeshDecimator::_collapse_map;
 std::vector<List<int>> MeshDecimator::_permutation;
 
+//leave original model intakt, save changes onlyin outputModel
 void MeshDecimator::setInputModel(Model* inputModel, Model* outputModel)
 {
 	_inputModel = inputModel;
@@ -40,6 +41,7 @@ void MeshDecimator::setInputModel(Model* inputModel, Model* outputModel)
 		}
 	}
 
+	//remap all vertices that appear  more than once from multiple meshes  and merge into one
 	std::sort(allVertices.begin(), allVertices.end());
 	std::map<int, int> remap;
 	auto currentVector = Vector(-9999999, -9999999, -9999999);

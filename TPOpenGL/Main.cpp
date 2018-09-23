@@ -76,7 +76,7 @@ bool isSavingFile = false;
 static bool show_app_metrics = false;
 static bool show_app_style_editor = false;
 static bool show_settings_window = true;
-static bool show_modelSettings_window = false;
+static bool show_modelSettings_window = true;
 static bool show_lightSettings_window = false;
 static bool show_decimateSettings_window = true;
 static bool show_help_window = true;
@@ -96,7 +96,7 @@ int rotationstate = 0;
 glm::vec3 importModelPos(0.0f, 0.0f, 0.0f);
 glm::vec3 rotateAxis(0.0f, 1.0f, 0.0f);
 glm::vec3 modelZeroPos(0.0f, 0.0f, 0.0f);
-glm::vec3 objectColor(1.2f, 2.0f, 2.0f);
+glm::vec3 objectColor(0.2f, 0.8f, 0.8f);
 // lighting
 glm::vec3 lightZeroPos(1.2f, 2.0f, 2.0f);
 glm::vec3 lightPos(1.2f, 2.0f, 2.0f);
@@ -106,8 +106,10 @@ GLFWwindow* window;
 
 //Mesh Decimation
 float decimatePercentage = 0.75f;
+//model light properties
 float specularStrength = 0.5f;
 float ambientStrength = 0.1f;
+float diffuseStrength = 0.8f;
 
 // ------------------------------------------------------------------
 //								METHODS
@@ -172,7 +174,7 @@ std::string getLoadedFile()
 
 	while (true)
 	{
-		std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for nanosuit" << std::endl << "write 3 for rock " << std::endl << "write 4 for tiger " << std::endl;
+		std::cout << "Please select which file you would like to import and press Enter" << std::endl << "write 1 for Planet" << std::endl << "write 2 for Rabbit" << std::endl << "write 3 for rock " << std::endl << "write 4 for tiger " << std::endl;
 		std::cout << "Waiting for input..." << std::endl;
 		//std::cin >> move;
 		std::cin >> cmdFileSelect;
@@ -186,8 +188,8 @@ std::string getLoadedFile()
 		}
 		case 2:
 		{
-			std::cout << "Selected 2: Nanosuit" << std::endl;
-			return  "3D Objects/nanosuit.obj";
+			std::cout << "Selected 2: Rabbit" << std::endl;
+			return  "3D Objects/rabbit.off";
 		}
 		case 3:
 		{
@@ -209,13 +211,13 @@ std::string getLoadedFile()
 	return "";
 }
 //ui content: buttons,sliders,..
+//Imgui filedialog has an issue with showing all files and filter selection, that is why there are two open buttons
 void startMyGui()
 {
 	//open new object
 	if (isOpeningFile)
 	{
-		//if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", "")) uncomment this line for file Selection
-		//use next line for all line readIn
+		//for file Selection: open button1
 		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", ""))
 		{
 			if (ImGuiFileDialog::Instance()->IsOk == true)
@@ -235,286 +237,292 @@ void startMyGui()
 	}
 
 
-		//open new object
-		if (isOpeningNewFile)
+	//open new object
+	if (isOpeningNewFile)
+	{
+		//use next line for all line readIn: open button2
+		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", "\0\0.obj\0.off\0\0", ".", ""))
 		{
-			//if (ImGuiFileDialog::Instance()->FileDialog("Choose File", ".obj\0.off\0\0", ".", "")) uncomment this line for file Selection
-			//use next line for all line readIn
-			if (ImGuiFileDialog::Instance()->FileDialog("Choose File", "\0\0.obj\0.off\0\0", ".", ""))
+			if (ImGuiFileDialog::Instance()->IsOk == true)
 			{
-				if (ImGuiFileDialog::Instance()->IsOk == true)
-				{
-					ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
+				ProgramSettings::ImportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
 
-					std::string extension = ProgramSettings::ImportedModelPath;
-					std::string ext = extension.substr(extension.length() - 4);
-					std::cout << "model" << ProgramSettings::ImportedModelPath << " has been imported!" << "extension: " << ext << endl;
+				std::string extension = ProgramSettings::ImportedModelPath;
+				std::string ext = extension.substr(extension.length() - 4);
+				std::cout << "model" << ProgramSettings::ImportedModelPath << " has been imported!" << "extension: " << ext << endl;
 
-					currentModel = Model(ProgramSettings::ImportedModelPath);
-					MeshDecimator::setInputModel(&currentModel, &outputModel);
-				}
-
-				isOpeningNewFile = false;
+				currentModel = Model(ProgramSettings::ImportedModelPath);
+				MeshDecimator::setInputModel(&currentModel, &outputModel);
 			}
-		}
 
-		if (isSavingFile)
+			isOpeningNewFile = false;
+		}
+	}
+
+	//save as..explorer window
+	if (isSavingFile)
+	{
+		if (ImGuiFileDialog::Instance()->FileDialog("Choose File", "\0\0", ".", ""))
 		{
-			if (ImGuiFileDialog::Instance()->FileDialog("Choose File", "\0\0", ".", ""))
+			if (ImGuiFileDialog::Instance()->IsOk == true)
 			{
-				if (ImGuiFileDialog::Instance()->IsOk == true)
+				ProgramSettings::exportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
+
+				std::string extension = ProgramSettings::exportedModelPath;
+				std::string ext = extension.substr(extension.length() - 4);
+				//	std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: "  << ext<< endl;
+				if (ext == ".obj")
 				{
-					ProgramSettings::exportedModelPath = ImGuiFileDialog::Instance()->GetFilepathName();
-
-					std::string extension = ProgramSettings::exportedModelPath;
-					std::string ext = extension.substr(extension.length() - 4);
-					//	std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: "  << ext<< endl;
-					if (ext == ".obj")
-					{
-						std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << ext << endl;
-						outputModel.exportModelAsObj(ProgramSettings::exportedModelPath);
-					}
-					else if (ext == ".off")
-					{
-						std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << ext << endl;
-						outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
-					}
-					else
-					{
-						outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
-						std::cout << "ext: " << ext << "is not allowed" << endl;
-					}
-
+					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << ext << endl;
+					outputModel.exportModelAsObj(ProgramSettings::exportedModelPath);
 				}
-
-				isSavingFile = false;
-			}
-		}
-
-		//all gui windows
-		if (show_settings_window)
-		{
-			ImGui::Begin("Global Settings", &show_settings_window);
-			{
-
-
-				ImGui::Text("Change Background Color");                           // Display some text (you can use a format string too)
-
-				ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
-				ImGui::Checkbox("Show Mesh Decimation Settings Window", &show_decimateSettings_window);
-				ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
-				ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
-				ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
-				ImGui::Checkbox("is Opening File bool", &isOpeningFile);
-				ImGui::Checkbox("is Opening New File bool", &isOpeningNewFile);
-				ImGui::Checkbox("Show Help Window", &show_help_window);
-				ImGui::Checkbox("Wireframe", &isInWireframe);
-				if (isInWireframe)
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				else if (ext == ".off")
+				{
+					std::cout << "model" << ProgramSettings::exportedModelPath << " has been exported!" << "extension: " << ext << endl;
+					outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
+				}
 				else
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-				ImGui::Checkbox("Camera Mode", &cameraMode);
-				if (cameraMode) {
-					inUI = false;
-					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				}
-				else {
-
-					inUI = true;
-					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				}
-				ImGui::Checkbox("Show About Window", &show_app_about);
-				ImGui::Checkbox("Camera: lock on Model", &lockOn);
-				if (lockOn)
 				{
-					view = camera.lockOnModel(importModelPos);
+					outputModel.exportModelAsOff(ProgramSettings::exportedModelPath);
+					std::cout << "ext: " << ext << "is not allowed" << endl;
 				}
 
-				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			}
-			ImGui::End();
-		}
 
-		if (show_modelSettings_window)
+			isSavingFile = false;
+		}
+	}
+
+	//all gui windows
+	if (show_settings_window)
+	{
+		ImGui::Begin("Global Settings", &show_settings_window);
 		{
-			ImGui::Begin("Model Settings", &show_modelSettings_window);
-			{
-				ImGui::Text("Object Information:");
-				ImGui::Text("Vertices: %d, Indices: %d, Faces: %d", outputModel.getNumVertices(), outputModel.getNumIndices(), outputModel.getNumFaces());
-				ImGui::Text("Change Object Color");
-				ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
-				ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
-				ImGui::SliderFloat("X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::SliderFloat("Y-Axis", &importModelPos.y, -2.0f, 2.0f);
-				ImGui::SliderFloat("Z-Axis", &importModelPos.z, -2.0f, 2.0f);
-				if (ImGui::Button("Reset Position"))
-					importModelPos = modelZeroPos;
-				ImGui::Text("Change Object Rotation");
+			ImGui::Text("Change Background Color");                           // Display some text (you can use a format string too)
+
+			ImGui::ColorEdit3("Background Color", (float*)&clear_color); // Edit 3 floats representing a color
+			ImGui::Checkbox("Wireframe Mode", &isInWireframe);
+			ImGui::Checkbox("Camera Mode", &cameraMode); ImGui::SameLine();
+			ImGui::Text(" | Press TAB to exit Camera Mode"); 
+			ImGui::Checkbox("Camera: lock on Model", &lockOn);
+			ImGui::Separator();
+			ImGui::Checkbox("Show Mesh Decimation Settings Window", &show_decimateSettings_window);
+			ImGui::Checkbox("Show Model Settings Window", &show_modelSettings_window);
+			ImGui::Checkbox("Show Light Settings Window", &show_lightSettings_window);
+			ImGui::Checkbox("Show Metrics Window", &show_app_metrics);
+			ImGui::Checkbox("Show Help Window", &show_help_window);
+			if (isInWireframe)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 			
-				if (ImGui::RadioButton("Rotate X Axis", &rotationstate, 0))
-					rotateAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-				if (ImGui::RadioButton("Rotate Y Axis", &rotationstate, 1))
-					rotateAxis = glm::vec3(1.0f, 0.0f, 0.0f);
-				if (ImGui::RadioButton("Rotate Z Axis", &rotationstate, 2))
-					rotateAxis = glm::vec3(0.0f, 0.0f, 1.0f);
-
-				
-				ImGui::SliderFloat("Rotate Object", &modelRotation, 0.0f, 6.5f);
-				ImGui::Text("Change Object Size");
-				ImGui::SliderFloat("Model Size", &modelSizef, 0.01f, 10.0f);
-				
-				ImGui::Text("Change Object Lighting Properties");
-				ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);
-				ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::Checkbox("Contineuos Object Rotation", &isContinousRotatingObject);
-				
-
+			if (cameraMode) {
+				inUI = false;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			}
-			ImGui::End();
-		}
+			else {
 
-		if (show_decimateSettings_window)
-		{
-			ImGui::Begin("Decimate Settings", &show_decimateSettings_window);
+				inUI = true;
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+			
+			ImGui::Checkbox("Show About Window", &show_app_about);
+			if (lockOn)
 			{
-
-				ImGui::Text("For Mesh Decimation: Use the Slider or Up and Down Arrows ");
-				//only the first of the buttons works, no matter which you set
-				//ImGuiDir downButton = ImGuiDir(3);  3 is down in the enum
-				if (ImGui::ArrowButton("Decimate Model:", 3))
-				{
-					if (decimatePercentage > 0.01f)
-						decimatePercentage -= 0.01f;
-					MeshDecimator::decimate(decimatePercentage);
-				}
-
-
-				if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.001f, 1.0f))
-				{
-					MeshDecimator::decimate(decimatePercentage);
-					//MeshDecimator::setInputModel(&currentModel);
-					//currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
-				}
-				if (ImGui::ArrowButton("Decimate Model:", 2))
-				{
-					MeshDecimator::decimate(decimatePercentage);
-					decimatePercentage = decimatePercentage + 0.01f;
-				}
-				ImGui::ProgressBar(decimatePercentage);
-				//ImGuiDir upButton = ImGuiDir(2);  2 is up in the enum
-				
-
+				view = camera.lockOnModel(importModelPos);
 			}
-			ImGui::End();
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		}
+		ImGui::End();
+	}
 
-
-		if (show_lightSettings_window)
+	if (show_modelSettings_window)
+	{
+		ImGui::Begin("Model Settings", &show_modelSettings_window);
 		{
-			ImGui::Begin("Light Settings", &show_lightSettings_window);
-			{
-				ImGui::Text("Change Light Position");                           // Display some text (you can use a format string too)
-				ImGui::SliderFloat("X-Axis", &lightPos.x, -5.0f, 5.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-				ImGui::SliderFloat("Y-Axis", &lightPos.y, -5.0f, 5.0f);
-				ImGui::SliderFloat("Z-Axis", &lightPos.z, -5.0f, 5.0f);
-
-
-				if (ImGui::Button("Reset Position"))
-				{
-					lightPos = lightZeroPos;
-					//model = glm::translate(model, lightPos);
-				}
-
-				ImGui::Checkbox("Continous Lamp Movement", &isMovingLight);
-			}
-			ImGui::End();
-		}
-
-		if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
-		if (show_app_style_editor) { ImGui::Begin("Style Editor", &show_app_style_editor); ImGui::ShowStyleEditor(); ImGui::End(); }
-		if (show_app_about)
-		{
-			ImGui::Begin("AboutMesh Decimator", &show_app_about, ImGuiWindowFlags_AlwaysAutoResize);
-			ImGui::Text("Mesh Decimator, %s", ImGui::GetVersion());
+			ImGui::Text("Object Information: Vertices: %d, Indices: %d, Faces: %d", outputModel.getNumVertices(), outputModel.getNumIndices(), outputModel.getNumFaces());
 			ImGui::Separator();
-			ImGui::Text("By Valentin Kircher Bautista.");
-			ImGui::Text("Mesh Decimator is licensed under the MIT License, see LICENSE for more information.");
-			ImGui::End();
-		}
+			ImGui::Text("Change Object Size");				
+			ImGui::SliderFloat("Model Size", &modelSizef, 0.01f, 10.0f);
+			ImGui::NewLine();
+			ImGui::Text("Change Object Color");
+			ImGui::ColorEdit3("Object Color", (float*)&objectColor); // Edit 3 floats representing a color
+			ImGui::NewLine();
+			ImGui::Text("Change Object Position");                           // Display some text (you can use a format string too)
+			ImGui::SliderFloat("Move Object in X-Axis", &importModelPos.x, -2.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Move Object in Y-Axis", &importModelPos.y, -2.0f, 2.0f);
+			ImGui::SliderFloat("Move Object in Z-Axis", &importModelPos.z, -2.0f, 2.0f);
+			if (ImGui::Button("Reset Position"))
+				importModelPos = modelZeroPos;
+			ImGui::NewLine();
 
-		if (show_help_window)
+			ImGui::Text("Change Object Rotation");
+		
+			if (ImGui::RadioButton("X Axis", &rotationstate, 0))
+				rotateAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Y Axis", &rotationstate, 1))
+				rotateAxis = glm::vec3(1.0f, 0.0f, 0.0f);
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Z Axis", &rotationstate, 2))
+				rotateAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+
+			
+			ImGui::SliderFloat("Rotate Object", &modelRotation, 0.0f, 6.2f);
+			ImGui::Checkbox("Contineuos Object Rotation", &isContinousRotatingObject);
+			ImGui::Text("Change Object Lighting Properties");
+			ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f);
+			ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Diffuse Strength", &diffuseStrength, 0.0f, 1.0f);  // Edit 1 float using a slider from 0.0f to 1.0f
+
+		}
+		ImGui::End();
+	}
+
+	if (show_decimateSettings_window)
+	{
+		ImGui::Begin("Decimate Settings", &show_decimateSettings_window);
 		{
-			ImGui::Begin("Help window", &show_help_window, ImGuiWindowFlags_AlwaysAutoResize);
-			ImGui::Text("Commands: ", ImGui::GetVersion());
-			ImGui::Separator();
-			ImGui::Text("Use WASD to move the camera angle around as in first person");
-			ImGui::Text("Press TAB to exit Camera Mode");
-			ImGui::Text("Press C to enter camera Mode, mouse controls camera");
-			ImGui::Text("Press 0 to enter Wireframe Mode and F to exit");
-			ImGui::Text("Beware to not have camera Lock on and camera mode simultaneously on");
-			ImGui::End();
+
+			ImGui::Text("For Mesh Decimation: Use the Slider or Up and Down Arrows ");
+			//only the first of the buttons works, no matter which you set
+			//ImGuiDir downButton = ImGuiDir(3);  3 is down in the enum
+			if (ImGui::ArrowButton("Decimate Model:", 3))
+			{
+				if (decimatePercentage > 0.01f)
+					decimatePercentage -= 0.01f;
+				MeshDecimator::decimate(decimatePercentage);
+			}
+
+
+			if (ImGui::SliderFloat("Decimate Percentage", &decimatePercentage, 0.001f, 1.0f))
+			{
+				MeshDecimator::decimate(decimatePercentage);
+				//MeshDecimator::setInputModel(&currentModel);
+				//currentModel = *MeshDecimator::getDecimatedModel(decimatePercentage);
+			}
+			if (ImGui::ArrowButton("Decimate Model:", 2))
+			{
+				MeshDecimator::decimate(decimatePercentage);
+				decimatePercentage = decimatePercentage + 0.01f;
+			}
+			ImGui::ProgressBar(decimatePercentage);
+			//ImGuiDir upButton = ImGuiDir(2);  2 is up in the enum
+			
+
 		}
+		ImGui::End();
+	}
 
 
-		ImGui::BeginMainMenuBar();
+	if (show_lightSettings_window)
+	{
+		ImGui::Begin("Light Settings", &show_lightSettings_window);
 		{
-			if (ImGui::BeginMenu("File.."))
+			ImGui::Text("Change Light Position");                           // Display some text (you can use a format string too)
+			ImGui::SliderFloat("Move Light in X-Axis", &lightPos.x, -5.0f, 5.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Move Light in Y-Axis", &lightPos.y, -5.0f, 5.0f);
+			ImGui::SliderFloat("Move Light in Z-Axis", &lightPos.z, -5.0f, 5.0f);
+
+
+			if (ImGui::Button("Reset Position"))
 			{
-				if (ImGui::Button("Open new Object(allFiles)")) {
-
-					isOpeningNewFile = true;
-
-					if (ProgramSettings::ImportedModelPath.length() > 0)
-						ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
-				}
-
-				if (ImGui::Button("Open Object(Select Format)")) {
-
-					isOpeningFile = true;
-
-					if (ProgramSettings::ImportedModelPath.length() > 0)
-						ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
-				}
-				if (ImGui::MenuItem("Save As.."))
-				{
-					isSavingFile = true;
-					if (ProgramSettings::exportedModelPath.length() > 0)
-						ImGui::Text("Chosen model file : %s", ProgramSettings::exportedModelPath.c_str());
-				}
-				ImGui::MenuItem("Exit");
-				ImGui::EndMenu();
+				lightPos = lightZeroPos;
+				//model = glm::translate(model, lightPos);
 			}
 
-			if (ImGui::BeginMenu("Settings"))
-			{
-				ImGui::Checkbox("Go in Camera Mode", &cameraMode);
-				ImGui::MenuItem("Show Mesh Decimator", NULL, &show_decimateSettings_window);
-				ImGui::MenuItem("Show Global Settings", NULL, &show_settings_window);
-				ImGui::MenuItem("Show Model Settings", NULL, &show_modelSettings_window);
-				ImGui::MenuItem("Show Light Settings", NULL, &show_lightSettings_window);
-				ImGui::MenuItem("Show Metrics", NULL, &show_app_metrics);
-				ImGui::MenuItem("Show Style Editor", NULL, &show_app_style_editor);
-				ImGui::MenuItem("Show About Mesh Decimator", NULL, &show_app_about);
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Decimate Mesh"))
-			{
-				ImGui::MenuItem("Mesh Decimator Tool", NULL, &show_decimateSettings_window);
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Help"))
-			{
-				ImGui::MenuItem("Show Help", NULL, &show_help_window);
-				ImGui::MenuItem("Show About Mesh Decimator", NULL, &show_app_about);
-				ImGui::EndMenu();
+			ImGui::Checkbox("Continous Lamp Movement", &isMovingLight);
+		}
+		ImGui::End();
+	}
+
+	if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
+	if (show_app_style_editor) { ImGui::Begin("Style Editor", &show_app_style_editor); ImGui::ShowStyleEditor(); ImGui::End(); }
+	if (show_app_about)
+	{
+		ImGui::Begin("AboutMesh Decimator", &show_app_about, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("Mesh Decimator, %s", ImGui::GetVersion());
+		ImGui::Separator();
+		ImGui::Text("By Valentin Kircher Bautista.");
+		ImGui::Text("Mesh Decimator is licensed under the MIT License"); 
+		ImGui::Text("see https ://github.com/kircherv/Mesh-Decimation-Tool-Plugin- for more information.");
+		ImGui::End();
+	}
+
+	if (show_help_window)
+	{
+		ImGui::Begin("Help window", &show_help_window, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("Commands: ", ImGui::GetVersion());
+		ImGui::Separator();
+		ImGui::Text("Use WASD to move the camera angle around as in first person");
+		ImGui::Text("Press TAB to exit Camera Mode");
+		ImGui::Text("Press C to enter camera Mode, mouse controls camera");
+		ImGui::Text("Press 0 to enter Wireframe Mode and F to exit");
+		ImGui::Text("Beware to not have camera Lock on and camera mode simultaneously on");
+		ImGui::End();
+	}
+
+
+	ImGui::BeginMainMenuBar();
+	{
+		if (ImGui::BeginMenu("File.."))
+		{
+			if (ImGui::Button("Open new Object(allFiles)")) {
+
+				isOpeningNewFile = true;
+
+				if (ProgramSettings::ImportedModelPath.length() > 0)
+					ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
 			}
 
-			ImGui::EndMainMenuBar();
+			if (ImGui::Button("Open Object(Select Format)")) {
 
+				isOpeningFile = true;
+
+				if (ProgramSettings::ImportedModelPath.length() > 0)
+					ImGui::Text("Chosen model file : %s", ProgramSettings::ImportedModelPath.c_str());
+			}
+			if (ImGui::MenuItem("Save As.."))
+			{
+				isSavingFile = true;
+				if (ProgramSettings::exportedModelPath.length() > 0)
+					ImGui::Text("Chosen model file : %s", ProgramSettings::exportedModelPath.c_str());
+			}
+			ImGui::MenuItem("Exit");
+			ImGui::EndMenu();
 		}
 
-		ImGui::Render();
+		if (ImGui::BeginMenu("Settings"))
+		{
+			ImGui::Checkbox("Go in Camera Mode", &cameraMode);
+			ImGui::MenuItem("Show Mesh Decimator", NULL, &show_decimateSettings_window);
+			ImGui::MenuItem("Show Global Settings", NULL, &show_settings_window);
+			ImGui::MenuItem("Show Model Settings", NULL, &show_modelSettings_window);
+			ImGui::MenuItem("Show Light Settings", NULL, &show_lightSettings_window);
+			ImGui::MenuItem("Show Metrics", NULL, &show_app_metrics);
+			ImGui::MenuItem("Show Style Editor", NULL, &show_app_style_editor);
+			ImGui::MenuItem("Show About Mesh Decimator", NULL, &show_app_about);
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Decimate Mesh"))
+		{
+			ImGui::MenuItem("Mesh Decimator Tool", NULL, &show_decimateSettings_window);
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Help"))
+		{
+			ImGui::MenuItem("Show Help", NULL, &show_help_window);
+			ImGui::MenuItem("Show About Mesh Decimator", NULL, &show_app_about);
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
+
+	}
+
+	ImGui::Render();
 
 	}
 
@@ -580,6 +588,7 @@ void startMyGui()
 		importShader.setMat4("model", model3);
 		importShader.setFloat("specularStrength", specularStrength);
 		importShader.setFloat("ambientStrength", ambientStrength);
+		importShader.setFloat("diffuseStrength", diffuseStrength);
 
 
 		outputModel.Draw(importShader);

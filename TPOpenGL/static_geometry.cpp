@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include "static_geometry.h"
-
+//Render Cube for Lamp Object and destroy it after closing
 unsigned int StaticGeometry::cubeVBO, StaticGeometry::cubeVAO;
 unsigned int StaticGeometry::lightVAO;
 
